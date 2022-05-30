@@ -6,6 +6,10 @@
 # This notebook is intended to:
 # * Show how to connect to Awesense's Energy Data Models (EDM).
 # * Access various documentations on the available functions and views. 
+# 
+# Please refer to the [introduction.ipynb](introduction.ipynb) notebook for more details about the core views such as `grid`, `grid_element`, and `grid_element_data_source`.
+
+# ---
 
 # ## Set up
 
@@ -18,13 +22,13 @@ import urllib.parse
 
 # **Connection** 
 
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. \
+# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-edm_address = input('EDM server address: ')
+edm_address = getpass.getpass(prompt='EDM server address: ')
 
 print('\nEDM login information')
 edm_name = getpass.getpass(prompt='Username: ')
@@ -36,29 +40,42 @@ get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_a
 get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
 get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
 
+# Delete the credential variables for security purpose.
+del edm_name, edm_password
+
+
+# ---
 
 # ## Documentation
 
-# Use the `get_function_documentation()` function to return the details of all available functions.
-
-# In[3]:
-
-
-get_ipython().run_cell_magic('sql', '', '\nSELECT function_name, function_args, description\nFROM get_function_documentation();')
-
-
 # Use the `get_class_documentation()` function to return the information for all views, tables, and types in the schema.
 
-# In[4]:
+# In[3]:
 
 
 get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM get_class_documentation();')
 
 
-# The `class_name` and `function_name` arguments in the `get_class_documentation()` function can be used to do a wildcard matching. For example, the `class_name='grid'` input returns the results for all classes with the word 'grid' in them. 
+# Please note that the `ts_data_source_double` class is the type that the `ts_data_source_select()` function mentioned below returns. 
+# 
+# Use the `get_function_documentation()` function to return the details of all available functions.
+
+# In[4]:
+
+
+get_ipython().run_cell_magic('sql', '', '\nSELECT function_name, function_args, description\nFROM get_function_documentation();')
+
+
+# For both `get_class_documentation()` and `get_function_documentation()` functions, their input arguments can be used to do a wildcard matching. For example, the input argument of 'grid' returns the results that contain the word 'grid' in them.
 
 # In[5]:
 
 
 get_ipython().run_cell_magic('sql', '', "\nSELECT class_name, column_name, description\nFROM get_class_documentation('grid');")
+
+
+# In[6]:
+
+
+get_ipython().run_cell_magic('sql', '', "\nSELECT function_name, function_args, description\nFROM get_function_documentation('grid');")
 

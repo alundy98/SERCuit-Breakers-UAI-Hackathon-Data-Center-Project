@@ -5,6 +5,8 @@
 
 # This notebook is intended to:
 # - Demonstrate how to access time series data for meters and SCADAs from Awesense's Energy Data Models (EDM).
+# 
+# Please refer to the [introduction.ipynb](introduction.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Models (EDM).
 
 # ---
 
@@ -23,13 +25,12 @@ import urllib.parse
 pio.renderers.default='notebook'
 
 
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. \
-# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
+# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-edm_address = input('EDM server address: ')
+edm_address = getpass.getpass(prompt='EDM server address: ')
 
 print('\nEDM login information')
 edm_name = getpass.getpass(prompt='Username: ')
@@ -40,6 +41,9 @@ get_ipython().run_line_magic('load_ext', 'sql')
 get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
 get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
 get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+
+# Delete the credential variables for security purpose.
+del edm_name, edm_password
 
 
 # ---
@@ -60,17 +64,25 @@ get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
 # In[3]:
 
 
-get_ipython().run_cell_magic('sql', '', '    \nCREATE OR REPLACE temporary VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN json_object_keys(geds.metrics) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
+get_ipython().run_cell_magic('sql', '', '    \nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
 
 
 # **Downstream of a Grid** 
 # - Specify `grid_id` and `grid_element_id` whose downstream meter data to fetch for.
 
-# In[5]:
+# In[4]:
 
 
 grid_id = input('Grid Id: ') # awefice
 grid_element_id = input('Grid Element Id: ') # line_segment_57
+
+
+# Check when this grid was last updated.
+
+# In[5]:
+
+
+get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE grid_id = '{grid_id}';")
 
 
 # - Create a temporary view `meter_data_source` to make it more convenient to access the data sources for the grid elements in the trace for the specified element.
@@ -78,7 +90,7 @@ grid_element_id = input('Grid Element Id: ') # line_segment_57
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_data_source AS\nSELECT meter.grid_element_id,\n        meter.grid_id,\n        geds.grid_element_data_source_id,\n        lower(geds.valid) as start_time,\n        upper(geds.valid) as end_time,\n        geds.friendly_id\nFROM grid_get_downstream('{grid_id}', '{grid_element_id}') AS meter\n    LEFT JOIN grid_element_data_source geds\n        ON meter.grid_element_id = geds.grid_element_id\n        AND meter.grid_id = geds.grid_id\n        AND geds.type = 'CONSUMER'\nWHERE meter.type = 'Meter';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_data_source AS\n    SELECT meter.grid_id,\n            meter.grid_element_id,\n            geds.grid_element_data_source_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_downstream('{grid_id}', '{grid_element_id}') AS meter\n    LEFT JOIN grid_element_data_source geds\n        ON meter.grid_element_id = geds.grid_element_id\n        AND meter.grid_id = geds.grid_id\n        AND geds.type = 'CONSUMER'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE meter.type = 'Meter';")
 
 
 # **Consumption Data**
@@ -87,7 +99,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW mete
 # In[7]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_consumption AS\nSELECT meter.friendly_id,\n        timestamp,\n        value AS kWh\nFROM meter_data_source meter\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = meter.grid_id\n    AND gem.grid_element_id = meter.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'CONSUMER';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_consumption AS\nSELECT meter.grid_id,\n        meter.grid_element_id,\n        meter.friendly_id,\n        timestamp,\n        value AS kWh\nFROM meter_data_source meter\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = meter.grid_id\n    AND gem.grid_element_id = meter.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'CONSUMER';")
 
 
 # **Summary**
@@ -141,7 +153,7 @@ px.line(df_meter, x='month', y='kwh',
 # In[11]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nCREATE OR REPLACE temporary VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN json_object_keys(geds.metrics) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
+get_ipython().run_cell_magic('sql', '', '\nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
 
 
 # **Sources of a Grid** 
@@ -159,7 +171,7 @@ grid_element_id = input('Grid Element Id: ') # line_segment_57
 # In[13]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_data_source AS\nSELECT scada.grid_element_id,\n        scada.grid_id,\n        geds.grid_element_data_source_id,\n        lower(geds.valid) as start_time,\n        upper(geds.valid) as end_time,\n        geds.friendly_id\nFROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true') AS scada\n    LEFT JOIN grid_element_data_source geds\n        ON scada.grid_element_id = geds.grid_element_id\n        AND scada.grid_id = geds.grid_id\n    AND geds.type = 'SENSOR'\nWHERE scada.type = 'CircuitBreaker'; ")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_data_source AS\n    SELECT scada.grid_element_id,\n            scada.grid_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            geds.grid_element_data_source_id,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true') AS scada\n        LEFT JOIN grid_element_data_source geds\n            ON scada.grid_element_id = geds.grid_element_id\n            AND scada.grid_id = geds.grid_id\n            AND geds.type = 'SENSOR'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE scada.type = 'CircuitBreaker';")
 
 
 # **SCADA Time Series**
@@ -168,7 +180,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scad
 # In[14]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_time_series AS\nSELECT gem.type, gem.grid_element_id ,\n        scada.friendly_id,\n        timestamp,\n        value AS kWh\nFROM scada_data_source scada\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = scada.grid_id\n    AND gem.grid_element_id = scada.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'SENSOR';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_time_series AS\nSELECT gem.type, \n        gem.grid_id,\n        gem.grid_element_id ,\n        scada.friendly_id,\n        timestamp,\n        value AS kWh\nFROM scada_data_source scada\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = scada.grid_id\n    AND gem.grid_element_id = scada.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'SENSOR';")
 
 
 # **Summary**

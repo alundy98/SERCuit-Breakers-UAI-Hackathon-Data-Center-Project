@@ -1,4 +1,4 @@
-# jupyter_notebooks &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Awesense/edm-app-examples/blob/master/LICENSE)
+# jupyter_notebooks &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 jupyter_notebooks is a collection of application examples of how to use [Awesense](https://www.awesense.com)'s Energy Data Model 
 (EDM), specifically using Jupyter notebooks.  It currently contains examples of tracing connectivity in a circuit, transformer asset management, and time series meter and SCADA data retrieval.
 
@@ -15,12 +15,12 @@ This section provides an example of how to work with EDM.
 
 
 ## Applications
-Listed below are applications in the [jupyter_notebooks](https://github.com/Awesense/edm-app-examples/tree/master/jupyter_notebooks) folder.
-  * [transformer_asset_management_outage](https://github.com/Awesense/edm-app-examples/blob/master/jupyter_notebooks/transformer_asset_management_outage.ipynb) - 
+Listed below are applications in the [jupyter_notebooks]() folder.
+  * [transformer_asset_management_outage](transformer_asset_management_outage.ipynb) - 
     use case of transformer asset management.
-  * [tgi_tracing](https://github.com/Awesense/edm-app-examples/blob/master/jupyter_notebooks/tgi_tracing.ipynb) - 
+  * [tgi_tracing](tgi_tracing.ipynb) - 
     programmatic approach to tracing connectivity in a circuit, a feature also available in TGI.
-  * [time_series_access](https://github.com/Awesense/edm-app-examples/tree/master/jupyter_notebooks/time_series_access.ipynb) - 
+  * [time_series_access](time_series_access.ipynb) - 
     time series data retrieval for meters and SCADAs.
 
   
@@ -38,9 +38,7 @@ python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the n
 ```
 
 ### Usage
-The [edm_overview](https://github.com/Awesense/edm-app-examples/tree/master/jupyter_notebooks/edm_overview.ipynb) notebook
-contains documentation on how to connect to Awesense's EDM and lists details of available functions and views. This is a 
-great place to start to ensure that your credentials are working and to familiarize with the Awesense's EDM platform.
+The [introduction](introduction.ipynb) notebook contains documentation on how to connect to Awesense's EDM and highlights core views and functions available. This is a great place to start to ensure that your credentials are working and to familiarize with the Awesense's EDM platform.
 
 As the notebook is designed to run from top to bottom, one of the easiest way to execute all is to click Cell from 
 the top menu ribbon, and click Run All. 

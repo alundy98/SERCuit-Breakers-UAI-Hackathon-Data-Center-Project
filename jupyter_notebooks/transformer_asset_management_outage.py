@@ -26,13 +26,12 @@ pd.set_option('display.max_columns', None)
 
 # ### Connection
 
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. \
-# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
+# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-edm_address = input('EDM server address: ')
+edm_address = getpass.getpass(prompt='EDM server address: ')
 
 print('\nEDM login information')
 edm_name = getpass.getpass(prompt='Username: ')
@@ -43,6 +42,9 @@ get_ipython().run_line_magic('load_ext', 'sql')
 get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
 get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
 get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+
+# Delete the credential variables for security purpose.
+del edm_name, edm_password
 
 
 # ## Example
@@ -58,7 +60,15 @@ grid_id = 'awefice'
 grid_element_id = 'line_segment_5'
 
 
+# Check when the grid was last updated.
+
 # In[4]:
+
+
+get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid \nWHERE grid_id = '{grid_id}';")
+
+
+# In[5]:
 
 
 get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downstream('{grid_id}','{grid_element_id}') \nWHERE type = 'Meter';")
@@ -70,7 +80,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downs
 
 # Let's take a look at the transformers downstream of the grid element ID `line_segment_5` in the `awefice` grid.
 
-# In[5]:
+# In[6]:
 
 
 # Get the transformer information.
@@ -93,7 +103,7 @@ df.head()
 
 # We can easily visualize the data, such as the breakdown of transformers' phases, their ages, etc.
 
-# In[6]:
+# In[7]:
 
 
 # Create a dataframe of counts by phases.
@@ -107,7 +117,7 @@ fig = px.pie(df_phases_cts,
 fig.update_traces(textposition='inside', textinfo='percent+label+value')
 
 
-# In[7]:
+# In[8]:
 
 
 # Calculate age as the number of years passed since commission date to today.
@@ -124,7 +134,7 @@ fig.update_layout(xaxis_title_text='Age (years)',
 
 # From the histogram above, we can see that there are 2 transformers that are 40 years of age or greater. This can also be identified by filtering out the data directly as the below.
 
-# In[8]:
+# In[9]:
 
 
 # Filter the dataset for transformers with 40 years of age or greater.
@@ -136,7 +146,7 @@ df2.shape[0]
 
 # Let's see where these transformers are on the map.
 
-# In[9]:
+# In[10]:
 
 
 # Configure coordinates to display on the map.
@@ -157,7 +167,7 @@ display(m)
 
 # We can easily drill into the details of those transformers. For example, let's take a look at their KVA ratings.
 
-# In[10]:
+# In[11]:
 
 
 # Create a histogram of KVA ratings.
