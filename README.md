@@ -38,8 +38,10 @@ Below are data currently in place. The grid is composed of two primaries (also k
   * Cabinet
   * Substation
   * Pole
-* EV Charger
-* Photovoltaic
+* Distributed Energy Resources (DERs)
+  * EV Charger
+  * Photovoltaic
+  * Battery
 * Jumper
 * Busbar
 
@@ -58,22 +60,43 @@ Below are data currently in place. The grid is composed of two primaries (also k
   * MCB (breaker) Value
   * Voltage Level
   * Parent Transformer
+  * Maximal Demand
+  * Meter Number
+  * Address
+  * Is Critical
+  * Tariff ID
 * Transformer
   * Load Loss & No Load Loss
   * kVA Rating
   * Voltage Level
   * Commission Date
 * EV Charger
+  * Make Model
   * Connector Type
+  * Active Charging Power
+  * Active Generation Power
   * Is DC Charger
   * Max Current & Max Voltage
   * Charging Level
 * Photovoltaic
   * Module
+  * Panel Area
+  * Panel Rated Power
+  * Commission Date
   * AC & DC Size
+  * DC to AC Ratio
   * Inverter
   * Racking
   * Tilt & Azimuth Angle
+* Line Segment
+  * System
+  * Phase to Phase Voltage
+  * Make Model
+  * Is Insulated
+  * Wire Diameter
+  * Materials
+  * Rating A
+  * Is Operation Status
 
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | History |
@@ -95,7 +118,7 @@ Below are data that will become available in the future.
 * Service Delivery Point
 * Manhole
 
-While bringing new GIS Grid elements and attributes to the curated dataset, Awesense will also be populating additional attributes of existing GIS elements in the dataset. A CSV file detailing all grid element types and their respective properties that the Awesense Platform recognizes can be found [here](https://sandbox.awesense.com/docs/_static/gis_metadata.csv).
+While bringing new GIS Grid elements and attributes to the curated dataset, Awesense will also be populating additional attributes of existing GIS elements in the dataset. A CSV file detailing all grid element types and their respective properties that the Awesense Platform recognizes can be found [here](https://sandbox.awesense.com/docs/_static/gis_metadata.csv). Please note that some custom fields stored in the `meta` data may not be included in this CSV file. 
 
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | 
