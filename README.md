@@ -4,21 +4,16 @@ edm-app-examples is a collection of application examples of how to use [Awesense
 
 ## Folder Organization
 edm-app-examples is organized as the following:
-* [jupyter_notebooks](jupyter_notebooks) - 
-examples of accessing EDM through Jupyter notebooks.
-
-
-## Getting Started
-Each folder contains an individual README.md file with more details specific to that folder.
-
-EDM server address and credentials to connect to the EDM instance are required for all applications. 
-Please do not store the credentials in notebooks, nor share them with anyone else.
+* [intro_and_tutorials](intro_and_tutorials) - a
+collection of introduction and tutorial materials to get started and learn how to use EDM.
+* [code_snippets](code_snippets) - code snippets demonstrating quick analytical insights.
+* [use_cases](use_cases) - real implementations of use cases from various areas of the energy domain.
 
 
 ## Sandbox
 `Sandbox` is an Awesense server where its customers, partners and others can use the full functionality of the Awesense platform and TGI, to explore and create applications and solutions for the ecosystem using realistic simulated data. 
 
-The [jupyter notebooks](jupyter_notebooks) in this repo work can be tested against the data in `Sandbox`. If you would like access, please contact api@awesense.com.
+All the code in this repository can be tested against the data in `Sandbox`. If you would like access, please contact api@awesense.com.
 
 Below are data types that are currently available in this server and those that are upcoming.
 
@@ -38,12 +33,11 @@ Below are data currently in place. The grid is composed of two primaries (also k
   * Cabinet
   * Substation
   * Pole
-* Distributed Energy Resources (DERs)
-  * EV Charger
-  * Photovoltaic
-  * Battery
 * Jumper
 * Busbar
+* EV Charger
+* Photovoltaic
+* Battery
 
 **Common GIS Grid Element Attributes**
 * Geo-coordinates
@@ -134,6 +128,23 @@ While bringing new GIS Grid elements and attributes to the curated dataset, Awes
 
 Please stay tuned as Awesense continues publishing additional `Sandbox` data catalogs soon.
 
+
+## Getting Started
+Each folder contains an individual README.md file with more details specific to that folder. If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutorials) is a great place to start to ensure that your EDM credentials are working and to familiarize with Awesense's EDM platform. Please do not store the credentials anywhere in the code, nor share them with anyone else.
+
+
+### Install Dependencies
+At the time of writing, it is assumed that Python 3.7 and pip3 are installed for the purposes of using this repository. Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases is at the main folder level. Any additional libraries specific to each use case are at the specific use_cases/name_of_use_cases folder level.
+
+In order to create a clean virtual environment for this repository, the following commands should be executed from a terminal opened in this directory:
+```bash
+python3 -m venv /your/desired/directory # While this only needs to be run once, repeated executions will not erase the existing libraries
+source /your/desired/directory/bin/activate
+pip3 install -r python_requirements.txt
+python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the new venv as expected
+```
+
+Please refer to the [use_case's README](/use_cases/README.md) for instruction on installing the additional libraries specific to a given use case.
 
 ## License
 edm-app-examples is licensed under the [MIT license](LICENSE). 
