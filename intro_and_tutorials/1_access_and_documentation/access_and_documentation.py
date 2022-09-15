@@ -4,10 +4,10 @@
 # ## Overview
 
 # This notebook is intended to:
-# * Show how to connect to Awesense's Energy Data Models (EDM).
+# * Show how to connect to Awesense's Energy Data Model (EDM).
 # * Access various documentations on the available functions and views. 
 # 
-# Please refer to the [introduction.ipynb](introduction.ipynb) notebook for more details about the core views such as `grid`, `grid_element`, and `grid_element_data_source`.
+# Please refer to the [main_concepts.ipynb](../2_main_concepts/main_concepts.ipynb) notebook for more details about the core views such as `grid`, `grid_element`, and `grid_element_data_source`.
 
 # ---
 
@@ -20,9 +20,9 @@ import getpass
 import urllib.parse
 
 
-# **Connection** 
-
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense.
+# **Connection**
+# 
+# Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:

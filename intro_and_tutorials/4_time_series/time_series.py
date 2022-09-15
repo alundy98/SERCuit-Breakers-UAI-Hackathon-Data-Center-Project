@@ -4,9 +4,9 @@
 # ## Overview
 
 # This notebook is intended to:
-# - Demonstrate how to access time series data for meters and SCADAs from Awesense's Energy Data Models (EDM).
+# - Demonstrate how to access time series data for meters and SCADAs from Awesense's Energy Data Model (EDM).
 # 
-# Please refer to the [introduction.ipynb](introduction.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Models (EDM).
+# Please refer to the [main_concepts.ipynb](../2_main_concepts/main_concepts.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Model (EDM).
 
 # ---
 
@@ -25,7 +25,10 @@ import urllib.parse
 pio.renderers.default='notebook'
 
 
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
+# **Connection**
+# 
+# Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
+# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 

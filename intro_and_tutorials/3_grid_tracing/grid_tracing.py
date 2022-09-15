@@ -13,7 +13,7 @@
 # 4. **Connected**: trace all grid elements in the same circuit as the specified grid element. 
 # 5. **Same Voltage**: trace all grid elements in the circuit with the same voltage as the specified grid element.
 # 
-# Please refer to the [introduction.ipynb](introduction.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Models (EDM).
+# Please refer to the [main_concepts.ipynb](../2_main_concepts/main_concepts.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Model (EDM).
 
 # ---
 
@@ -31,12 +31,18 @@ import urllib.parse
 pd.set_option('display.max_columns', None)
 
 
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
+# **Connection**
+# 
+# Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
+# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-edm_address = getpass.getpass(prompt='EDM server address: ')
+**Connection**
+
+Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
+<span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>edm_address = getpass.getpass(prompt='EDM server address: ')
 
 print('\nEDM login information')
 edm_name = getpass.getpass(prompt='Username: ')

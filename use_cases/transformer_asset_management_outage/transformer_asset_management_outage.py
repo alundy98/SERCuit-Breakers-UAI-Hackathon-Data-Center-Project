@@ -24,9 +24,10 @@ import urllib.parse
 pd.set_option('display.max_columns', None)
 
 
-# ### Connection
-
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
+# **Connection**
+# 
+# Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
+# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 

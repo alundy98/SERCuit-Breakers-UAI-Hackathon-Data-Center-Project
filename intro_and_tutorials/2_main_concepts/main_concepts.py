@@ -4,10 +4,10 @@
 # ## Overview
 
 # This notebook is intended to:
-# * Introduce core views and functions available in Awesense's Energy Data Models (EDM).
+# * Introduce core views and functions available in Awesense's Energy Data Model (EDM).
 # * Demonstrate various ways to fetch and work with data using SQL and Python.
 # 
-# For complete documentation on the available views and functions, please refer to the [edm_overview.ipynb](edm_overview.ipynb) notebook.
+# For complete documentation on the available views and functions, please refer to the [access_and_documentation.ipynb](../1_access_and_documentation/access_and_documentation.ipynb) notebook.
 
 # ---
 
@@ -21,8 +21,8 @@ import urllib.parse
 
 
 # **Connection**
-
-# Enter the full EDM server address to connect to (e.g. sandbox-edm.awesense.com), and the login credentials provided by Awesense.
+# 
+# Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
@@ -64,7 +64,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid;')
 
 # The `grid_element` view contains information about grid elements in a grid. Properties that are common to all grid elements, such as `phases`, are explicitly listed as columns of the view. And additional metadata that may differ between grid elements of different types (e.g. meter vs. transformers, etc.) are stored as JSONB in the `meta` column. 
 # 
-# The `grid_id` column from the `grid_element` view references the `grid_id` from the `grid` view. And the `grid_id` and `grid_element_id` columns are often used as input arguments to various functions, as demonstrated in the **Functions** section below and in the [tgi_tracing.ipynb](tgi_tracing.ipynb) notebook. 
+# The `grid_id` column from the `grid_element` view references the `grid_id` from the `grid` view. And the `grid_id` and `grid_element_id` columns are often used as input arguments to various functions, as demonstrated in the **Functions** section below and in the [grid_tracing.ipynb](../3_grid_tracing/grid_tracing.ipynb) notebook. 
 
 # In[4]:
 
@@ -100,7 +100,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT meta ->> 'longitude' as longit
 
 # **Grid Element Data Source**
 
-# The `grid_element_data_source` view represents the linking between time-series data and physical elements on the grid. The primary key of this view is `grid_element_data_source_id`, and is used as an input argument of the `ts_data_source_select()` function to retrieve time series data, as demonstrated in the **Functions** section below and in the [time_series_access.ipynb](time_series_access.ipynb) notebook.
+# The `grid_element_data_source` view represents the linking between time-series data and physical elements on the grid. The primary key of this view is `grid_element_data_source_id`, and is used as an input argument of the `ts_data_source_select()` function to retrieve time series data, as demonstrated in the **Functions** section below and in the [time_series.ipynb](../4_time_series/time_series.ipynb) notebook.
 
 # In[8]:
 
@@ -132,7 +132,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT distinct provider\nFROM grid_e
 
 # The `grid_get_downstream()` function is one of tracing functions available in EDM, and is mentioned here to demonstrate a function with grid and grid element arguments. Its input arguments can be found by running the following query.
 # 
-# Please refer to the [tgi_tracing.ipynb](tgi_tracing.ipynb) notebook for examples of all tracing functions.
+# Please refer to the [grid_tracing.ipynb](../3_grid_tracing/grid_tracing.ipynb) notebook for examples of all tracing functions.
 # 
 
 # In[11]:
