@@ -3,10 +3,10 @@
 
 # ## Overview
 
-# The notebook is intended to:
+# This notebook is intended to:
 # * Quantify the number of EV chargers that could be installed/operated in a section of the grid (i.e. downstream from a transformer) without overloading the transformer.
 # 
-# The use case is designed as follows:
+# This use case is designed as follows:
 #   * Choose the grid of interest. 
 #   * Define the area of interest within the grid by choosing a transformer.
 #   * Aggregate all loads downstream from the specific transformer.
@@ -176,7 +176,7 @@ grid_element_id = input('Enter transformer ID: ') # transformer_92
 
 
 # #### Meter Information
-# Fetch and display all the meters and their relevant information downstream from the transformer.
+# Fetch and display the hourly aggregate load downstream of the transformer. Hourly load is available from `2021-01-01 00:00:00 PST` until the present.
 
 # In[7]:
 
@@ -233,11 +233,11 @@ df_transformer_load
 plot_available_capacity(df_transformer_load)
 
 
-# Hourly available capacity is higher during the summer and lower during the winter. The distribution of the hourly available capacity shows significant variability within the hours, while the median does not vary much across the hours. In contrast, the distribuiton of the hourly available capacity shows less variability each month but more visible median changes from month to month.  
+# Hourly available capacity is higher during the summer and lower during the winter (winter peaking service area). The distribution of the hourly available capacity shows significant variability within the hours, while the median does not vary much across the hours. In contrast, the distribution of the hourly available capacity shows less variability each month but more visible median changes from month to month. Distribution plots can also be used to gain insight into Time of Use rates in selected grid sections.  
 
 # #### EV Chargers Analysis
 # 
-# The maximum number of EV chargers that could be installed without overloading the transformer is calculated by dividing the hourly available capacity by the maximum EV charging power. 
+# The maximum number of EV chargers that could be installed without overloading the transformer is calculated by dividing the hourly available capacity by the maximum EV charging power. This calculation assumes the worst-case scenario where all the EV chargers run simultaneously at maximum load.
 
 # In[10]:
 
@@ -252,6 +252,9 @@ ev_max_power = input('Enter EV Charger Maximum Power (kW): ') # 15
 calc_number_of_evs(df_transformer_load, ev_max_power)
 
 
-# The plot shows the number of EV chargers that could be installed and operated in this section of the grid. The plot shows that this number is higher during the summer when the load is reduced and the hourly available capacity increases. In contrast, the number of EV chargers that could be installed is lower during winter when the hourly available capacity decreases. Lastly, this number fluctuates during the fall and spring as load and available capacity vary between summer and winter.  
+# The plot shows the number of EV chargers that could be installed and operated in this section of the grid. The plot shows that this number is higher during the summer when the load is reduced and the hourly available capacity increases. In contrast, the number of EV chargers that could be installed is lower during winter when the hourly available capacity decreases. Lastly, this number fluctuates during the fall and spring as load and available capacity vary between summer and winter. 
+# 
+# Based on this analysis, the number of EV chargers that can be installed and operated year round (in the case of `transformer_92` and EV charger with a maximum power of `15` kW) is `47`.
+# 
 
 # ---

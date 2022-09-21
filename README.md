@@ -13,7 +13,7 @@ collection of introduction and tutorial materials to get started and learn how t
 ## Sandbox
 `Sandbox` is an Awesense server where its customers, partners and others can use the full functionality of the Awesense platform and TGI, to explore and create applications and solutions for the ecosystem using realistic simulated data. 
 
-All the code in this repository can be tested against the data in `Sandbox`. If you would like access, please contact api@awesense.com.
+Awesense users can test the code in this repository using the `Sandbox` server. Notebooks were run using input parameters (for example, transformer's name) corresponding to Sandbox data.  Using other servers might require different parameters and produce results different from those presented in these notebooks.
 
 Below are data types that are currently available in this server and those that are upcoming.
 
