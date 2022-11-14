@@ -166,7 +166,7 @@ df_transformers = df_transformers[['grid_element_id', 'ownership', 'rating_kva',
 df_transformers
 
 
-# Choose a transformer from the above list.
+# Choose a transformer from the above list. Please note that the write-up for this use case is based on `transformer_92`.
 
 # In[6]:
 
@@ -198,12 +198,12 @@ df_meters
 
 
 # #### Load
-# Fetch and display the hourly aggregate load downstream of the transformer.
+# Fetch and display the hourly aggregate load downstream of the transformer. Please note that if there is any upstream load, it is treated as available for EV chargers.
 
 # In[8]:
 
 
-result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer,                         tdss.timestamp at time zone \'America/Vancouver\' as timestamp,                         SUM(tdss.value) as "total_kW", ge.meta                 FROM grid_element ge                 JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                     ON ggd.grid_id = ge.grid_id                 JOIN grid_element_data_source geds                     ON geds.grid_element_id = ggd.grid_element_id                 JOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss                     ON true                 WHERE ge.grid_element_id = \'{grid_element_id}\'                     AND ggd.type = \'Meter\'                 GROUP BY tdss.timestamp, ge.meta, ge.grid_element_id                 ORDER by 2;')
+result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                         tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                         SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as "total_kW", ge.meta                 FROM grid_element ge                 JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                    ON ggd.grid_id = ge.grid_id                 JOIN grid_element_data_source geds_c                     ON geds_c.grid_element_id = ggd.grid_element_id                     AND geds_c.type = \'CONSUMER\'                 JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                     ON true                 LEFT JOIN grid_element_data_source geds_p                     ON geds_p.grid_element_id = geds_c.grid_element_id                     AND geds_p.type = \'PRODUCER\'                 LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                     ON tdss_p.timestamp = tdss_c.timestamp                 WHERE ge.grid_element_id = \'{grid_element_id}\'                     AND ggd.type = \'Meter\'                 GROUP BY ge.grid_element_id, tdss_c.timestamp, ge.meta                 ORDER by 2;')
 
 # Convert the results to a data frame.
 df_transformer_load = result.DataFrame()
@@ -213,7 +213,7 @@ df_transformer_load = pd.concat([df_transformer_load.drop(['meta'], axis=1),
                                 df_transformer_load['meta'].apply(pd.Series)], axis=1)
 
 # Choose the relevant columns to display. 
-df_transformer_load = df_transformer_load[['transformer', 'timestamp', 'total_kW', 'rating_kva']]
+df_transformer_load = df_transformer_load[['transformer_id', 'timestamp', 'total_kW', 'rating_kva']]
 
 # Calculate the hourly available capacity. 
 df_transformer_load['available_capacity'] = df_transformer_load['rating_kva']*0.98- df_transformer_load['total_kW']
@@ -252,7 +252,7 @@ ev_max_power = input('Enter EV Charger Maximum Power (kW): ') # 15
 calc_number_of_evs(df_transformer_load, ev_max_power)
 
 
-# The plot shows the number of EV chargers that could be installed and operated in this section of the grid. The plot shows that this number is higher during the summer when the load is reduced and the hourly available capacity increases. In contrast, the number of EV chargers that could be installed is lower during winter when the hourly available capacity decreases. Lastly, this number fluctuates during the fall and spring as load and available capacity vary between summer and winter. 
+# The plot shows the number of EV chargers that could be installed and operated in this section of the grid. For the example with `transformer_92`, this number tends to be higher during the summer when the load is reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, if there are PV installations present in this section of the grid, the fluctuation in the number of EV chargers that could be installed and operated without overloading the transformers becomes more pronounced for each day.
 # 
 # Based on this analysis, the number of EV chargers that can be installed and operated year round (in the case of `transformer_92` and EV charger with a maximum power of `15` kW) is `47`.
 # 

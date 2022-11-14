@@ -199,12 +199,12 @@ timerange = start[:10] + ' ~ ' + end[:10]
 
 # ## System
 
-# #### Data: Hourly Load Time Series 
+# #### Data: Hourly Consumption Load Time Series 
 
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,\n        ge.grid_element_id,\n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh', '{timerange_tz}') tdss\n    ON TRUE\nWHERE geds.grid_id = '{grid_id}'\n    AND ge.type = 'Meter'\nORDER BY tdss.timestamp;")
+get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,\n        ge.grid_element_id,\n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh', '{timerange_tz}') tdss\n    ON TRUE\nWHERE geds.grid_id = '{grid_id}'\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER'\nORDER BY tdss.timestamp;")
 
 
 # #### Visualization
@@ -280,7 +280,7 @@ meters = "','".join(df_grid_cp['grid_element_id'].unique())
 # In[12]:
 
 
-get_ipython().run_cell_magic('sql', 'grid_meters <<', "\nSELECT grid_element_id,\n        meta ->> 'longitude' as longitude, \n        meta ->> 'latitude' as latitude \nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND grid_element_id IN ('{meters}')")
+get_ipython().run_cell_magic('sql', 'grid_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude   \nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND grid_element_id IN ('{meters}')")
 
 
 # In[13]:
@@ -323,7 +323,7 @@ feeder_id = input('Enter top feeder transformer ID: ') # transformer_6
 # In[17]:
 
 
-get_ipython().run_cell_magic('sql', 'feeder_meters <<', "SELECT ggd.grid_element_id,\n        ge.meta ->> 'longitude' as longitude, \n        ge.meta ->> 'latitude' as latitude \nFROM grid_get_downstream('{grid_id}', '{feeder_id}') ggd\nJOIN grid_element ge\n    ON ge.grid_id = ggd.grid_id\n    AND ge.grid_element_id = ggd.grid_element_id;")
+get_ipython().run_cell_magic('sql', 'feeder_meters <<', "SELECT ggd.grid_element_id, ge.geometry, ge.type,\n    ST_Y(ge.geometry) as latitude,    \n    ST_X(ge.geometry) as longitude         \nFROM grid_get_downstream('{grid_id}', '{feeder_id}') ggd\nJOIN grid_element ge\n    ON ge.grid_id = ggd.grid_id\n    AND ge.grid_element_id = ggd.grid_element_id\nWHERE ge.grid_element_id NOT LIKE ('line_segment%')\n    AND ge.grid_element_id NOT LIKE ('busbar%');")
 
 
 # In[18]:
@@ -410,7 +410,7 @@ tariff_id = input('Enter Tariff ID: ') # res_basic
 # In[26]:
 
 
-get_ipython().run_cell_magic('sql', 'tariff_meters <<', "\nSELECT grid_element_id,\n        meta ->> 'longitude' as longitude, \n        meta ->> 'latitude' as latitude \nFROM grid_element \nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\n    AND meta ->> 'tariff_id' = '{tariff_id}';")
+get_ipython().run_cell_magic('sql', 'tariff_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,    \n    ST_X(geometry) as longitude        \nFROM grid_element \nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\n    AND meta ->> 'tariff_id' = '{tariff_id}';")
 
 
 # In[27]:

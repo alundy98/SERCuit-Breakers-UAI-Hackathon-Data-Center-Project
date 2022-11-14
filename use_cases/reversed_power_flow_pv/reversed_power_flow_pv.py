@@ -249,13 +249,13 @@ df_meter
 
 
 # #### Load
-# Fetch and display the aggregate load downstream of the transformer.
+# Fetch and display the aggregate consumption load downstream of the transformer.
 
 # In[8]:
 
 
 # Aggregate the load of all the meters downstream from the specific transformer. 
-result = get_ipython().run_line_magic('sql', "SELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,                         SUM(tdss.value) as total_kW                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                 JOIN grid_element_data_source geds                     ON geds.grid_id = ggd.grid_id                     AND geds.grid_element_id = ggd.grid_element_id                 JOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh') tdss                     ON true                 WHERE ggd.grid_id = '{grid_id}'                     AND ggd.type = 'Meter'                 GROUP BY tdss.timestamp                 ORDER by 1;")
+result = get_ipython().run_line_magic('sql', "SELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,                         SUM(tdss.value) as total_kW                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                 JOIN grid_element_data_source geds                     ON geds.grid_id = ggd.grid_id                     AND geds.grid_element_id = ggd.grid_element_id                 JOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh') tdss                     ON true                 WHERE ggd.grid_id = '{grid_id}'                     AND ggd.type = 'Meter'                     AND geds.type = 'CONSUMER'                 GROUP BY tdss.timestamp                 ORDER by 1;")
 
 # Convert the results to a dataframe.
 df_transformer_load = result.DataFrame()

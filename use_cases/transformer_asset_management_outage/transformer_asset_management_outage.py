@@ -6,6 +6,8 @@
 # This notebook is intended to:
 # * Mirror existing TGI functionalities in a notebook format.
 # * Demonstrate a use case: Transformer Asset Management.
+# 
+# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
 
 # ## Set up
 
@@ -16,8 +18,6 @@ import getpass
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import geopandas as gpd
-from shapely import wkb
 import folium
 import urllib.parse
 
@@ -85,7 +85,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downs
 
 
 # Get the transformer information.
-result = get_ipython().run_line_magic('sql', "SELECT *               FROM grid_get_downstream('{grid_id}','{grid_element_id}')               WHERE type LIKE 'Transformer';")
+result = get_ipython().run_line_magic('sql', "SELECT *,                 ST_Y(geometry) as geo_latitude,                 ST_X(geometry) as geo_longitude             FROM grid_get_downstream('{grid_id}','{grid_element_id}')             WHERE type LIKE 'Transformer';")
 
 # Turn the query result into a dataframe to work easily in Python.
 df = result.DataFrame()
@@ -94,9 +94,6 @@ df = result.DataFrame()
 df = pd.concat([df.drop(['meta'], axis=1),
                 df['meta'].apply(pd.Series)], 
                axis=1)
-
-# Convert geometry data to geographic coordinate system.
-df['geometry'] = df['geometry'].apply(lambda x: wkb.loads(x, hex=True))
 
 # Return the first few rows. 
 df.head()
@@ -151,16 +148,14 @@ df2.shape[0]
 
 
 # Configure coordinates to display on the map.
-gdf = gpd.GeoDataFrame(df2, crs="EPSG:4326", geometry=df['geometry'])
-
-map_latitude = gdf['geometry'].y.mean()
-map_longitude = gdf['geometry'].x.mean()
+map_latitude = df['geo_latitude'].mean()
+map_longitude = df['geo_longitude'].mean()
 
 # Create the map.
 m = folium.Map(location=[map_latitude, map_longitude], zoom_start=12)
 
 for _, row in df2.iterrows():
-    folium.Marker(location=[row['geometry'].y,row['geometry'].x],
+    folium.Marker(location=[row['geo_latitude'],row['geo_longitude']],
                   tooltip=round(row['age'],1)).add_to(m)
 
 display(m)
@@ -185,3 +180,9 @@ fig.show()
 
 
 # ---
+
+# In[ ]:
+
+
+
+

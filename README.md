@@ -3,22 +3,53 @@ edm-app-examples is a collection of application examples of how to use [Awesense
 (EDM). 
 
 ## Folder Organization
-edm-app-examples is organized as the following:
+edm-app-examples is organized as follows:
 * [intro_and_tutorials](intro_and_tutorials) - a
 collection of introduction and tutorial materials to get started and learn how to use EDM.
 * [code_snippets](code_snippets) - code snippets demonstrating quick analytical insights.
 * [use_cases](use_cases) - real implementations of use cases from various areas of the energy domain.
 
+Each folder contains an individual README.md file with more details specific to that folder. 
 
-## Sandbox
+
+## Getting Started
+While highly portable, all the code in this repository is set up to run out of the box against Awesense's `Sandbox` environment.
+
 `Sandbox` is an Awesense server where its customers, partners and others can use the full functionality of the Awesense platform and TGI, to explore and create applications and solutions for the ecosystem using realistic simulated data. 
 
-Awesense users can test the code in this repository using the `Sandbox` server. Notebooks were run using input parameters (for example, transformer's name) corresponding to Sandbox data.  Using other servers might require different parameters and produce results different from those presented in these notebooks.
+Notebooks were run and their outputs saved using input parameters (for example, grid ID, transformer IDs) corresponding to `Sandbox` data.  Using other servers might require entering different parameters and produce results different from those presented in these notebooks.
 
-Below are data types that are currently available in this server and those that are upcoming.
+NOTE: While notebooks were saved to include chart outputs, GitHub does not render them. Once you check out the notebooks locally and open them in Jupyter, you may have to click the "Not Trusted" button on the upper right to tell Jupyter to trust the notebook and render the plots. Otherwise, you will need to re-run the notebooks yourself to regenerate the plots. Note also that for charts involving time series for which the queries retrieved data up to the "present" moment, re-running the notebook will always produce different results from the saved version, since the "present" will have advanced and more data will be retrieved.
+
+If you do not already have account credentials for the `Sandbox` server, please contact api@awesense.com. 
+
+If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutorials) is a great place to start to ensure that your EDM credentials (whether for `Sandbox` or some other server) are working and to familiarize yourself with Awesense's EDM platform. <span style='color:red'> **Please do not store the credentials anywhere in the code, nor share them with anyone else.**</span>
+
+
+### Install Dependencies
+At the time of writing, it is assumed that Python 3.7 and pip3 are installed for the purposes of using this repository. Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases is at the main folder level. Any additional libraries specific to each use case are at the specific use_cases/name_of_use_cases folder level.
+
+In order to create a clean virtual environment for this repository, the following commands should be executed from a terminal opened in the directory this README is in:
+```bash
+python3 -m venv /your/desired/directory # While this only needs to be run once, repeated executions will not erase the existing libraries
+source /your/desired/directory/bin/activate
+pip3 install -r python_requirements.txt
+python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the new venv as expected
+```
+
+If restarting your command line terminal, only the `source` command needs to be re-run.
+
+Please refer to the [use_case's README](/use_cases/README.md) for instructions on installing the additional libraries specific to a given use case.
+
+
+## Sandbox Dataset
+
+Below is a summary of data types that are currently available in Awesense's Sandbox server, as well as data types that are upcoming.
+
+Additional documentation on data types of Awesense's Energy Data Model and the EDM SQL interface used by the notebooks in this repo can be consulted on the `Sandbox` server once logging in [here](https://sandbox.awesense.com/docs/index.html).
 
 ### Present Data 
-Below are data currently in place. The grid is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology.
+Below are data currently in place. There is one grid, called `awefice`, that is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology.
 
 **GIS Grid Elements**
 * Line Segment
@@ -95,11 +126,12 @@ Below are data currently in place. The grid is composed of two primaries (also k
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | History |
 |---|---|---|---|---|
-| SCADA | kWh | hourly | 3-phase | Jan 2021 - now |
-| Meter | kWh | hourly | 3-phase* | Jan 2021 - now |
-| Meter | V | hourly | 3-phase* | Jan 2021 - now |
+| SCADA | kWh | hourly | 3-phase aggregate | Jan 2021 - now |
+| Meter | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
+| Meter | V | hourly | 3-phase aggregate* | Jan 2021 - now |
+| Solar | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
 
-*3-phase for three phase meters, single phase for single phase meters
+*3-phase aggregate for three-phase grid elements, single phase for single-phase grid elements.
 
 
 ### Upcoming Data
@@ -112,13 +144,12 @@ Below are data that will become available in the future.
 * Service Delivery Point
 * Manhole
 
-While bringing new GIS Grid elements and attributes to the curated dataset, Awesense will also be populating additional attributes of existing GIS elements in the dataset. A CSV file detailing all grid element types and their respective properties that the Awesense Platform recognizes can be found [here](https://sandbox.awesense.com/docs/_static/gis_metadata.csv). Please note that some custom fields stored in the `meta` data may not be included in this CSV file. 
+While bringing new GIS Grid elements and attributes to the curated dataset, Awesense will also be populating additional attributes of existing GIS elements in the dataset. A CSV file detailing all grid element types and their respective properties that the Awesense Platform recognizes can be found in the documentation available on the `Sandbox` server once logging in [here](https://sandbox.awesense.com/docs/_static/gis_metadata.csv).  
 
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | 
 |---|---|---|---|
 | SCADA | V | hourly | per-phase| 
-| Solar | kWh | hourly | per-phase| 
 | Battery | kWh | hourly | per-phase| 
 | EV Charger | kWh | hourly | per-phase| 
 | Raptor* | kWh | hourly | per-phase| 
@@ -126,25 +157,8 @@ While bringing new GIS Grid elements and attributes to the curated dataset, Awes
 
 \* Raptor is an Awesense IoT device that measures and records current flowing through a grid line.
 
-Please stay tuned as Awesense continues publishing additional `Sandbox` data catalogs soon.
+Please stay tuned, as Awesense will be publishing schema updates and additional data on `Sandbox` soon.
 
-
-## Getting Started
-Each folder contains an individual README.md file with more details specific to that folder. If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutorials) is a great place to start to ensure that your EDM credentials are working and to familiarize with Awesense's EDM platform. Please do not store the credentials anywhere in the code, nor share them with anyone else.
-
-
-### Install Dependencies
-At the time of writing, it is assumed that Python 3.7 and pip3 are installed for the purposes of using this repository. Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases is at the main folder level. Any additional libraries specific to each use case are at the specific use_cases/name_of_use_cases folder level.
-
-In order to create a clean virtual environment for this repository, the following commands should be executed from a terminal opened in this directory:
-```bash
-python3 -m venv /your/desired/directory # While this only needs to be run once, repeated executions will not erase the existing libraries
-source /your/desired/directory/bin/activate
-pip3 install -r python_requirements.txt
-python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the new venv as expected
-```
-
-Please refer to the [use_case's README](/use_cases/README.md) for instruction on installing the additional libraries specific to a given use case.
 
 ## License
 edm-app-examples is licensed under the [MIT license](LICENSE). 

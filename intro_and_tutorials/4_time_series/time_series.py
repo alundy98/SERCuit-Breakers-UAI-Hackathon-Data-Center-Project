@@ -58,8 +58,8 @@ del edm_name, edm_password
 
 # *High level approach*
 # - Create a temporary view `grid_element_metric`, containing information on meters for grid elements and convenient access to the actual data.
-# - The `grid_get_downstream` function is used to gather information of meters that are downstream of a specified grid element.
-# - Time series are retrieved using the `ts_data_source_select` function.
+# - The `grid_get_downstream()` function is used to gather information of meters that are downstream of a specified grid element.
+# - Time series are retrieved using the `ts_data_source_select()` function.
 
 # **Grid Element Data**
 # * Create a temporary view `grid_element_metric`. 
@@ -145,8 +145,8 @@ px.line(df_meter, x='month', y='kwh',
 
 # *High level approach*
 # - Create a temporary view `grid_element_metric`, containing information on SCADAs for grid elements and convenient access to the actual data.
-# - The `grid_get_sources` function is used for switches that are top feeders of a specified element.
-# - Time series are retrieved using the `ts_source_select` function.
+# - The `grid_get_sources()` function is used for switches that are top feeders of a specified element.
+# - Time series are retrieved using the `ts_source_select()` function.
 
 # **Grid Element Data**
 # * Create a temporary view `grid_element_metric`.
