@@ -27,7 +27,8 @@ If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutori
 
 
 ### Install Dependencies
-At the time of writing, it is assumed that Python 3.7 and pip3 are installed for the purposes of using this repository. Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases is at the main folder level. Any additional libraries specific to each use case are at the specific use_cases/name_of_use_cases folder level.
+The notebooks in this repository have been mainly developed and tested using Python 3.9, although some of them can run on Python 3.7 as well. For the purpose of using this repository it is assumed that both Python and pip3 are already installed.
+Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases and code snippets is at the main folder level. Any additional libraries specific to each use case or snippet are at the specific use_cases/name_of_use_case or code_snippets/name_of_code_snippet folder level.
 
 In order to create a clean virtual environment for this repository, the following commands should be executed from a terminal opened in the directory this README is in:
 ```bash

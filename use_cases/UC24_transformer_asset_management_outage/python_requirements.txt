@@ -1,0 +1,14 @@
+branca==0.4.2
+charset-normalizer==2.0.12
+certifi==2021.10.8
+click==8.0.4
+click-plugins==1.1.1
+cligj==0.7.2
+Fiona==1.8.21
+folium==0.12.1.post1
+geopandas==0.10.2
+idna==3.3
+munch==2.5.0
+pyproj==3.2.1
+requests==2.27.1
+urllib3==1.26.8

@@ -2,13 +2,13 @@
 use_cases contains various examples that can be addressed with [Awesense](https://www.awesense.com)'s Energy Data Model (EDM). 
 
 # Folder Organization
-Each folder contains materials related to the respective use cases. Detailed description of each use case, if available, can be found there in a PDF format.
+Each use case folder contains materials related to the respective use cases. A detailed description of each use case in a PDF format is also available in the folders. In addition, a folder called `usecases_descriptions` contains PDF descriptions of current and future use cases and a table summarizing use cases implementations. Each use case description provides a quick start guide on implementing the respective use case using the Awesense Energy Transition Platform.
 
-Please stay tuned as Awesense continues publishing additional use cases.
+Please stay tuned as Awesense continues publishing additional use case descriptions and implementations.
 
 ## Getting Started
 ### Install Dependencies
-As noted in the general [README](../README.md), the additional libraries specific to the use case are included in the respective python_requirements.txt found in each folder if applicable. For example, the requirement file for the transformer asset management use case is in the [transformer_asset_management_outage](transformer_asset_management_outage) folder. 
+As noted in the general [README](../README.md), the additional libraries specific to the use case are included in the respective python_requirements.txt found in each folder if applicable. For example, the requirement file for the transformer asset management use case is in the [UC24_transformer_asset_management_outage](UC24_transformer_asset_management_outage) folder. 
 
 The same following commands can be executed from a terminal opened in the main directory to install these requirements as well:
 
