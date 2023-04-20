@@ -81,7 +81,7 @@ timerange_tz = f'[ {year_start} , {year_end} ]'
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', 'net_tariff <<', '\nSELECT ge.meta ->> \'tariff_id\' as tariff_id, \n    ROUND(CAST(SUM(tdss_c.value - COALESCE(tdss_p.value,0)) AS NUMERIC),2) as "net_kWh"\nFROM grid_element ge \nJOIN grid_element_data_source geds_c \n    ON geds_c.grid_element_id = ge.grid_element_id \n    AND geds_c.type = \'CONSUMER\' \nJOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss_c \n    ON true \nLEFT JOIN grid_element_data_source geds_p \n    ON geds_p.grid_element_id = geds_c.grid_element_id \n    AND geds_p.type = \'PRODUCER\' \nLEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss_p \n    ON tdss_p.timestamp = tdss_c.timestamp \nWHERE ge.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\'\nGROUP BY ge.meta ->> \'tariff_id\'\nORDER BY ge.meta ->> \'tariff_id\';')
+get_ipython().run_cell_magic('sql', 'net_tariff <<', '\nSELECT ge.meta ->> \'tariff_id\' as tariff_id, \n    ROUND(CAST(SUM(tdss_c.value - COALESCE(tdss_p.value,0)) AS NUMERIC),2) as "net_kWh"\nFROM grid_element ge \nJOIN grid_element_data_source geds_c \n    ON geds_c.grid_element_id = ge.grid_element_id \n    AND geds_c.type = \'CONSUMER\' \nJOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss_c \n    ON true \nLEFT JOIN grid_element_data_source geds_p \n    ON geds_p.grid_element_id = geds_c.grid_element_id \n    AND geds_p.type = \'PRODUCER\' \nLEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss_p \n    ON tdss_p.timestamp = tdss_c.timestamp \nWHERE ge.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\'\nGROUP BY ge.meta ->> \'tariff_id\'\nORDER BY ge.meta ->> \'tariff_id\';\n')
 
 
 # In[5]:
@@ -113,7 +113,7 @@ fig.show()
 # In[7]:
 
 
-get_ipython().run_cell_magic('sql', 'net_flow <<', '\nSELECT ge.meta ->> \'tariff_id\' as tariff_id, \n    tdss.value as "kWh",\n    geds.type\nFROM grid_element ge \nJOIN grid_element_data_source geds \n    ON geds.grid_element_id = ge.grid_element_id  \nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss \n    ON true \nWHERE ge.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\';')
+get_ipython().run_cell_magic('sql', 'net_flow <<', '\nSELECT ge.meta ->> \'tariff_id\' as tariff_id, \n    tdss.value as "kWh",\n    geds.type\nFROM grid_element ge \nJOIN grid_element_data_source geds \n    ON geds.grid_element_id = ge.grid_element_id  \nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\', \'{timerange_tz}\') tdss \n    ON true \nWHERE ge.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\';\n')
 
 
 # In[8]:

@@ -15,7 +15,7 @@
 # 
 # Results of such analysis will provide valuable insights for decision-making on increasing capacity, managing transformer bottleneck, and permitting additional EV chargers. 
 # 
-# For more details about transformer capacity analysis for EV charging and how it can be analyzed using Awesense's platform, please refer to the [UC04-01 - Transformer Capacity Analysis for EV Charging](UC04-01%20-%20Transformer%20Capacity%20Analysis%20for%20EV%20Charging.pdf) document.
+# For more details about transformer capacity analysis for EV charging and how it can be analyzed using Awesense's platform, please refer to the [UC04-01 - Transformer Capacity Analysis for EV Charging](../usecase_descriptions/UC04-01%20-%20Transformer%20Capacity%20Analysis%20for%20EV%20Charging.pdf) document.
 
 # ## Setup 
 
@@ -28,6 +28,7 @@ import numpy as np
 import urllib.parse
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from IPython.display import Markdown as md
 
 pd.set_option('display.max_columns', None)
 
@@ -124,7 +125,9 @@ def calc_number_of_evs(df, ev_power):
     fig.update_layout(yaxis = dict(dtick=1))
     fig.update_layout(height = 400, width=800)
     
-    fig.show()  
+    fig.show()
+    
+    return df
 
 
 # ---
@@ -249,12 +252,15 @@ ev_max_power = input('Enter EV Charger Maximum Power (kW): ') # 15
 # In[11]:
 
 
-calc_number_of_evs(df_transformer_load, ev_max_power)
+df_transformer_load = calc_number_of_evs(df_transformer_load, ev_max_power)
 
 
-# The plot shows the number of EV chargers that could be installed and operated in this section of the grid. For the example with `transformer_92`, this number tends to be higher during the summer when the load is reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, if there are PV installations present in this section of the grid, the fluctuation in the number of EV chargers that could be installed and operated without overloading the transformers becomes more pronounced for each day.
-# 
-# Based on this analysis, the number of EV chargers that can be installed and operated year round (in the case of `transformer_92` and EV charger with a maximum power of `15` kW) is `47`.
-# 
+# In[12]:
+
+
+# Description of the plots above. 
+md("The plot shows the number of EV chargers that could be installed and operated in this section of the grid.For the example with `transformer_92`, this number tends to be higher during the summer when the load is reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, if there are PV installations present in this section of the grid, the fluctuation in the number of EV chargers that could be installed and operated without overloading the transformers becomes more pronounced for each day.<br><br>Based on this analysis, the number of EV chargers that can be installed and operated year round (in the case of `transformer_92` and EV charger with a maximum power of {} kW) is {}.".format(ev_max_power, 
+                                                                                              '%.0f' % df_transformer_load['EVs'].min() ))
+
 
 # ---

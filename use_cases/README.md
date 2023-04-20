@@ -2,7 +2,7 @@
 use_cases contains various examples that can be addressed with [Awesense](https://www.awesense.com)'s Energy Data Model (EDM). 
 
 # Folder Organization
-Each use case folder contains materials related to the respective use cases. A detailed description of each use case in a PDF format is also available in the folders. In addition, a folder called `usecases_descriptions` contains PDF descriptions of current and future use cases and a table summarizing use cases implementations. Each use case description provides a quick start guide on implementing the respective use case using the Awesense Energy Transition Platform.
+Each use case folder contains materials related to the respective use cases. A link to a detailed description of the use case in a PDF format is available in the Overview section of each use cases' file. In addition, a folder called `usecases_descriptions` contains PDF descriptions of current and future use cases and a table summarizing use cases implementations. Each use case description provides a quick start guide on implementing the respective use case using the Awesense Energy Transition Platform.
 
 Please stay tuned as Awesense continues publishing additional use case descriptions and implementations.
 

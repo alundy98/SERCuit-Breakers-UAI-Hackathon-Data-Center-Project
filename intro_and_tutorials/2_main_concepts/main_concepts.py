@@ -57,7 +57,7 @@ del edm_name, edm_password
 # In[3]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid;')
+get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid;\n')
 
 
 # **Grid Element**
@@ -69,7 +69,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid;')
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element\nWHERE grid_id = 'awefice'\nLIMIT 1;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element\nWHERE grid_id = 'awefice'\nLIMIT 1;\n")
 
 
 # Below are different grid element types available in the `awefice` grid. 
@@ -79,7 +79,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element\nWHERE gr
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT DISTINCT type as element_type\nFROM grid_element\nWHERE grid_id = 'awefice'\nORDER BY element_type;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT DISTINCT type as element_type\nFROM grid_element\nWHERE grid_id = 'awefice'\nORDER BY element_type;\n")
 
 
 # A complete list of properties available in the `meta` column for a grid element can be returned using the built-in `json_each_text()` function. The following is an example of accessing each item in the `meta` column with the 'awefice' `grid_id` and the 'm_12' `grid_element_id`.
@@ -87,7 +87,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT DISTINCT type as element_type\
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT ge.grid_element_id, \n        meta_data.key, \n        meta_data.value\nFROM grid_element ge\nJOIN json_each_text(ge.meta::json) AS meta_data\n    ON true\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT ge.grid_element_id, \n        meta_data.key, \n        meta_data.value\nFROM grid_element ge\nJOIN json_each_text(ge.meta::json) AS meta_data\n    ON true\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';\n")
 
 
 # Specific properties from the `meta` column can be fetched individually as well.
@@ -95,7 +95,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT ge.grid_element_id, \n        
 # In[7]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT meta ->> 'address' as address,\n       meta ->> 'meter_number' as mater_number\nFROM grid_element \nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT meta ->> 'address' as address,\n       meta ->> 'meter_number' as mater_number\nFROM grid_element \nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';\n")
 
 
 # The `geometry` field can be easily converted to `latitude` and `longitude` values using postGIS functions.
@@ -105,7 +105,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT meta ->> 'address' as address,
 # In[8]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(geometry) as latitude,\n        ST_X(geometry) as longitude      \nFROM grid_element \nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(geometry) as latitude,\n        ST_X(geometry) as longitude      \nFROM grid_element \nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';\n")
 
 
 # For grid elements such as `line_segment` with starting and ending points, `geometry` can be used to display the `latitude` and `longitude` of the central point of the line as well as the lines' start and end coordinates:
@@ -113,7 +113,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(geometry) as latitude,\n 
 # In[9]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(ST_Centroid(geometry)) as center_point_latitude,\n    ST_X(ST_Centroid(geometry)) as center_point_longitude,\n    ST_Y(ST_StartPoint(geometry)) as start_point_latitude, \n    ST_X(ST_StartPoint(geometry)) as start_point_longitude,\n    ST_Y(ST_EndPoint(geometry)) as end_point_latitude, \n    ST_X(ST_EndPoint(geometry)) as end_point_longitude   \nFROM grid_element\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'line_segment_81';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(ST_Centroid(geometry)) as center_point_latitude,\n    ST_X(ST_Centroid(geometry)) as center_point_longitude,\n    ST_Y(ST_StartPoint(geometry)) as start_point_latitude, \n    ST_X(ST_StartPoint(geometry)) as start_point_longitude,\n    ST_Y(ST_EndPoint(geometry)) as end_point_latitude, \n    ST_X(ST_EndPoint(geometry)) as end_point_longitude   \nFROM grid_element\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'line_segment_81';\n")
 
 
 # **Grid Element Data Source**
@@ -123,7 +123,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT ST_Y(ST_Centroid(geometry)) as
 # In[10]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid_element_data_source\nLIMIT 5;')
+get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid_element_data_source\nLIMIT 5;\n')
 
 
 # The `type` field refers to the class of stored data, and there may be multiple `type` values for a given grid element. To retrieve the exact time series data of interest, filter the `grid_element_data_source` by the `type` as below.
@@ -131,7 +131,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM grid_element_data_sour
 # In[11]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source\nWHERE type = 'CONSUMER'\nLIMIT 5;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source\nWHERE type = 'CONSUMER'\nLIMIT 5;\n")
 
 
 # The `metrics` column is of type text[] and lists the units of measurements for time-series that can be retrieved for a given grid element. Please note that it is possible to have multiple metrics associated with the same `grid_element_data_source_id`. The following is an example of pulling out multiple grid element data sources available for the 'awefice' `grid_id` and the 'm_12' `grid_element_id`.
@@ -139,7 +139,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_sour
 # In[12]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_data_source_id, \n        geds.grid_id, \n        geds.grid_element_id, \n        metric_key \nFROM grid_element_data_source geds\nJOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n    ON true\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';    ")
+get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_data_source_id, \n        geds.grid_id, \n        geds.grid_element_id, \n        metric_key \nFROM grid_element_data_source geds\nJOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n    ON true\nWHERE grid_id = 'awefice'\n    AND grid_element_id = 'm_12';    \n")
 
 
 # The `provider` column represents the origin of the stored data, and may be used to properly identify the grid_element_data_source for the time series of interest.
@@ -147,7 +147,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_data_source_
 # In[13]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nSELECT distinct provider\nFROM grid_element_data_source;')
+get_ipython().run_cell_magic('sql', '', '\nSELECT distinct provider\nFROM grid_element_data_source;\n')
 
 
 # ---
@@ -164,7 +164,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT distinct provider\nFROM grid_e
 # In[14]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT function_args\nFROM get_function_documentation('grid_get_downstream');")
+get_ipython().run_cell_magic('sql', '', "\nSELECT function_args\nFROM get_function_documentation('grid_get_downstream');\n")
 
 
 # Below is an example with the 'awefice' `grid_id`, the 'm_10' `grid_element_id` and False to exclude the specified `grid_element_id` from the output list.
@@ -172,7 +172,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT function_args\nFROM get_functi
 # In[15]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_get_downstream('awefice', 'm_10', False);")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_get_downstream('awefice', 'm_10', False);\n")
 
 
 # **ts_data_source_select()**
@@ -184,7 +184,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_get_downstream('a
 # In[16]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT timestamp, value\nFROM ts_data_source_select('96ecaf9c-4c66-419d-a711-9d9027ff5f28', 'V', '[2022-04-01, 2022-04-30]'\n                          )\nLIMIT 5;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT timestamp, value\nFROM ts_data_source_select('96ecaf9c-4c66-419d-a711-9d9027ff5f28', 'V', '[2022-04-01, 2022-04-30]'\n                          )\nLIMIT 5;\n")
 
 
 # More generally, time series for multiple grid elements and metrics over the entire period can be retrieved by joining multiple tables as the following. Please note that the query output is ordered and limited for a demonstration purpose.
@@ -192,7 +192,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT timestamp, value\nFROM ts_data
 # In[17]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_id, \n        geds.type,\n        metric_key, \n        tdss.timestamp, \n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN UNNEST(geds.metrics::TEXT[]) metric_key\n    ON true\nJOIN ts_data_source_select(geds.grid_element_data_source_id, metric_key) tdss\n    ON true\nWHERE ge.grid_id = 'awefice'\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER' \nORDER by 3\nLIMIT 5;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_id, \n        geds.type,\n        metric_key, \n        tdss.timestamp, \n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN UNNEST(geds.metrics::TEXT[]) metric_key\n    ON true\nJOIN ts_data_source_select(geds.grid_element_data_source_id, metric_key) tdss\n    ON true\nWHERE ge.grid_id = 'awefice'\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER' \nORDER by 3\nLIMIT 5;\n")
 
 
 # ---
@@ -208,7 +208,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT geds.grid_element_id, \n      
 # In[18]:
 
 
-get_ipython().run_cell_magic('sql', 'result <<', "\nSELECT grid_element_id, type\nFROM grid_element\nWHERE grid_id = 'awefice';")
+get_ipython().run_cell_magic('sql', 'result <<', "\nSELECT grid_element_id, type\nFROM grid_element\nWHERE grid_id = 'awefice';\n")
 
 
 # Option 2
@@ -226,7 +226,7 @@ result = get_ipython().run_line_magic('sql', "SELECT grid_element_id, type FROM 
 
 
 # Save the sql output as a variable in multiple lines.
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id, type                 FROM grid_element                 WHERE grid_id = 'awefice'")
+result = get_ipython().run_line_magic('sql', "SELECT grid_element_id, type                  FROM grid_element                  WHERE grid_id = 'awefice'")
 
 
 # Then the following code can be run to convert the above SQL output `result` into a Python dataframe to work with.
@@ -253,5 +253,5 @@ grid_element_id = 'm_12'
 # In[23]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source\nWHERE grid_element_id = '{grid_element_id}';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source\nWHERE grid_element_id = '{grid_element_id}';\n")
 

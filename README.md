@@ -131,6 +131,7 @@ Below are data currently in place. There is one grid, called `awefice`, that is 
 | Meter | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
 | Meter | V | hourly | 3-phase aggregate* | Jan 2021 - now |
 | Solar | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
+| EV Charger | kWh | hourly | per-phase| Jan 2021 - now |
 
 *3-phase aggregate for three-phase grid elements, single phase for single-phase grid elements.
 
@@ -152,7 +153,6 @@ While bringing new GIS Grid elements and attributes to the curated dataset, Awes
 |---|---|---|---|
 | SCADA | V | hourly | per-phase| 
 | Battery | kWh | hourly | per-phase| 
-| EV Charger | kWh | hourly | per-phase| 
 | Raptor* | kWh | hourly | per-phase| 
 | Raptor Health* | IoT health | hourly | per-IoT device | 
 

@@ -14,7 +14,7 @@
 # 
 # Results of such analysis can provide valuable insights for decision-making on PV connection permits and grid upgrades or planning activities.  
 # 
-# For more details about reversed power flow and how it can be analyzed using Awesense's platform, please refer to the [UC05-01 - Reversed Power Flow and PV Capacity Analysis](UC05-01%20-%20Reversed%20Power%20Flow%20and%20PV%20Capacity%20Analysis.pdf)
+# For more details about reversed power flow and how it can be analyzed using Awesense's platform, please refer to the [UC05-01 - Reversed Power Flow and PV Capacity Analysis](../usecase_descriptions/UC05-01%20-%20Reversed%20Power%20Flow%20and%20PV%20Capacity%20Analysis.pdf)
 # 
 # document.
 

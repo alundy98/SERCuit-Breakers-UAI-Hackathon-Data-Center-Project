@@ -16,7 +16,7 @@
 # 
 # The results of such analysis can be used to increase customer satisfaction as it might lower customers' capacity payments or can help the Grid Planning department to better understand the real grid capacity constraints.
 # 
-# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC13-01 - Master Circuit Breaker Value vs. Measured Values Analysis](UC13-01%20-%20Master%20Circuit%20Breaker%20Value%20vs.%20Measured%20Values%20Analysis.pdf) document.
+# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC13-01 - Master Circuit Breaker Value vs. Measured Values Analysis](../usecase_descriptions/UC13-01%20-%20Master%20Circuit%20Breaker%20Value%20vs.%20Measured%20Values%20Analysis.pdf) document.
 
 # ---
 

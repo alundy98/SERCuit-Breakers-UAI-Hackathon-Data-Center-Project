@@ -79,3 +79,9 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT class_name, column_name, descr
 
 get_ipython().run_cell_magic('sql', '', "\nSELECT function_name, function_args, description\nFROM get_function_documentation('grid');")
 
+
+# In[ ]:
+
+
+
+

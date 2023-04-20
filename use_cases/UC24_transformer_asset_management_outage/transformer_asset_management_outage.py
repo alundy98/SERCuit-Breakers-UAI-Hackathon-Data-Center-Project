@@ -7,7 +7,7 @@
 # * Mirror existing TGI functionalities in a notebook format.
 # * Demonstrate a use case: Transformer Asset Management.
 # 
-# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
+# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](../usecase_descriptions/UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
 
 # ## Set up
 

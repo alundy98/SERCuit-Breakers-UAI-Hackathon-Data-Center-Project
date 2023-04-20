@@ -11,7 +11,7 @@
 # 
 # Insights originating from this type of analysis are essential for regulatory reporting, and allow utilities to understand consumer behaviour and improve rate design to increase the satisfaction and retention of consumers. 
 # 
-# For a comprehensive list of topological, hierarchical, geographical and customer segments that can be used for the CP & NCP analysis using the Awesense Platform, please refer to the [UC01-01 - Coincident Peak and Non-Coincident Peak Analysis.pdf](UC01-01%20-%20Coincident%20Peak%20and%20Non-Coincident%20Peak%20Analysis.pdf) document.
+# For a comprehensive list of topological, hierarchical, geographical and customer segments that can be used for the CP & NCP analysis using the Awesense Platform, please refer to the [UC01-01 - Coincident Peak and Non-Coincident Peak Analysis.pdf](../usecase_descriptions/UC01-01%20-%20Coincident%20Peak%20and%20Non-Coincident%20Peak%20Analysis.pdf) document.
 
 # ---
 
@@ -256,7 +256,7 @@ plot_pie(df_grid_cp,
          'Breakdown of Grid Load at System Peak {}'.format(system_max_time))
 
 
-# In[10]:
+# In[9]:
 
 
 # Find the max load and the corresponding meter.
@@ -268,7 +268,7 @@ print('Meter {} with the largest contribution to CP at {} kW.'.format(grid_max_u
 
 # #### Map View
 
-# In[11]:
+# In[10]:
 
 
 # Prepare a string of meters to use in SQL.
@@ -277,13 +277,13 @@ meters = "','".join(df_grid_cp['grid_element_id'].unique())
 
 # #### Data: Geo-locations
 
-# In[12]:
+# In[11]:
 
 
 get_ipython().run_cell_magic('sql', 'grid_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude   \nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND grid_element_id IN ('{meters}')")
 
 
-# In[13]:
+# In[12]:
 
 
 # Plot the meters on a map.
@@ -292,7 +292,7 @@ map_it(df_grid_cp, grid_meters, title='Map View of Meter Load at System Peak {}'
 
 # ### Non-Coincident Peak
 
-# In[14]:
+# In[13]:
 
 
 # Compute NCP for each meter.
@@ -302,7 +302,7 @@ df_grid_ncp = compute_ncp(df_system)
 plot_scatter(df_grid_ncp, title='Max Load for Each Meter Between {}'.format(timerange))
 
 
-# In[15]:
+# In[14]:
 
 
 # Table view of the NCP meter data.
@@ -312,7 +312,7 @@ df_grid_ncp.sort_values('timestamp').set_index('timestamp')
 # ---
 # ## Feeder Level Topology
 
-# In[16]:
+# In[15]:
 
 
 feeder_id = input('Enter top feeder transformer ID: ') # transformer_6
@@ -320,13 +320,13 @@ feeder_id = input('Enter top feeder transformer ID: ') # transformer_6
 
 # #### Data: Downstream Meters & Geo-locations
 
-# In[17]:
+# In[16]:
 
 
 get_ipython().run_cell_magic('sql', 'feeder_meters <<', "SELECT ggd.grid_element_id, ge.geometry, ge.type,\n    ST_Y(ge.geometry) as latitude,    \n    ST_X(ge.geometry) as longitude         \nFROM grid_get_downstream('{grid_id}', '{feeder_id}') ggd\nJOIN grid_element ge\n    ON ge.grid_id = ggd.grid_id\n    AND ge.grid_element_id = ggd.grid_element_id\nWHERE ge.grid_element_id NOT LIKE ('line_segment%')\n    AND ge.grid_element_id NOT LIKE ('busbar%');")
 
 
-# In[18]:
+# In[17]:
 
 
 # Convert the sql resultset from above to list.
@@ -338,7 +338,7 @@ df_feeder = df_system.loc[df_system['grid_element_id'].isin(feeder_meters_ls),:]
 
 # ### Coincident Peak (CP)
 
-# In[19]:
+# In[18]:
 
 
 # Filter the raw data `df_feeder` to the given feeder max load timestamp for Coincident Peak (CP).
@@ -349,7 +349,7 @@ plot_line_bar(df_feeder, df_system_agg, df_feeder_cp,
               title='Hourly System Load & {} Load Breakdown at {}'.format(feeder_id, system_max_time))
 
 
-# In[20]:
+# In[19]:
 
 
 # Plot the breakdown of the feeder load at the system peak.

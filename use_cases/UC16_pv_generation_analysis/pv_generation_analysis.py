@@ -19,7 +19,7 @@
 # 
 # Results of such analysis can provide valuable insights for decision-makers on PV penetration, connection permits, and grid upgrades or planning activities.
 # 
-# For more details about PV generation analysis and how it can be analyzed using Awesense's platform, please refer to the [UC16-01 - Registered PV Generation Analysis](UC16-01%20-%20Registered%20PV%20Generation%20Analysis.pdf) document.
+# For more details about PV generation analysis and how it can be analyzed using Awesense's platform, please refer to the [UC16-01 - Registered PV Generation Analysis](../usecase_descriptions/UC16-01%20-%20Registered%20PV%20Generation%20Analysis.pdf) document.
 
 # ## Setup 
 
@@ -32,6 +32,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from IPython.display import Markdown as md
 
 
 # **Connection**
@@ -257,13 +258,18 @@ df_pv_agg = calc_pv_production(df_ts)
 plot_pv(df_pv_agg)
 
 
-# The plots above show the hourly PV generation in kWh (top plot), what percentage of the hourly consumption load is supplied by PV generation (middle plot), and the distribution of this percentage with respect to the hour of the day (bottom plot).
-# 
-# In the example above (downstream of transformer_36), the PV installation generates up to 3.6 kWh during the summer. This corresponds to a maximum of up to 74% of the hourly consumption load being supplied by PV generation. In the winter, only up to about 10% of the hourly consumption load is supplied by PV generation. Hourly distribution of PV generation is higher during the daytime, reaching a peak around 1-2 pm, and is zero during the night when there is no sunlight. However, even for the mid-day hours, there are still days when the percentage is very close to 0, likely due to rainy/snowy days or possibly due to system malfunctions.
-# 
-# For other transformers, these values may be different.
-
 # In[12]:
+
+
+# Description of the plots above. 
+winter_max = df_pv_agg.loc[df_pv_agg['timestamp'].dt.month<3, 'percent_production'].max()
+md("The plots above show the hourly PV generation in kWh (top plot),    what percentage of the hourly consumption load is supplied by PV generation (middle plot),    and the distribution of this percentage with respect to the hour of the day (bottom plot). <br><br>   In the example above (downstream of {}), the PV installation generates up to {} kWh during the summer.   This corresponds to a maximum of up to {}% of the hourly consumption load being supplied by PV generation.   In the winter, only up to {}% of the hourly consumption load is supplied by PV generation.   Hourly distribution of PV generation is higher during the daytime, reaching a peak around 1-2 pm,    and is zero during the night when there is no sunlight.    However, even for the mid-day hours, there are still days when the percentage is very close to 0,    likely due to rainy/snowy days or possibly due to system malfunctions. <br><br>   For other transformers, these values may be different.".format(grid_element_id, 
+                                                                  '%.2f' % df_pv_agg['TRUE_GENERATION'].max() 
+                                                                  ,'%.2f' % df_pv_agg['percent_production'].max()
+                                                                  ,'%.2f' % winter_max))
+
+
+# In[13]:
 
 
 # Plot the percentage of monthly PV generations with respect to monthly loads and all-time PV generation percentage. 
