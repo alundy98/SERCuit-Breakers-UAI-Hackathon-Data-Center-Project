@@ -67,7 +67,7 @@ del edm_name, edm_password
 # In[3]:
 
 
-get_ipython().run_cell_magic('sql', '', '    \nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
+get_ipython().run_cell_magic('sql', '', '    \nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;\n')
 
 
 # **Downstream of a Grid** 
@@ -85,7 +85,7 @@ grid_element_id = input('Grid Element Id: ') # line_segment_57
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE grid_id = '{grid_id}';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE grid_id = '{grid_id}';\n")
 
 
 # - Create a temporary view `meter_data_source` to make it more convenient to access the data sources for the grid elements in the trace for the specified element.
@@ -93,7 +93,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_data_source AS\n    SELECT meter.grid_id,\n            meter.grid_element_id,\n            geds.grid_element_data_source_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_downstream('{grid_id}', '{grid_element_id}') AS meter\n    LEFT JOIN grid_element_data_source geds\n        ON meter.grid_element_id = geds.grid_element_id\n        AND meter.grid_id = geds.grid_id\n        AND geds.type = 'CONSUMER'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE meter.type = 'Meter';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_data_source AS\n    SELECT meter.grid_id,\n            meter.grid_element_id,\n            geds.grid_element_data_source_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_downstream('{grid_id}', '{grid_element_id}') AS meter\n    LEFT JOIN grid_element_data_source geds\n        ON meter.grid_element_id = geds.grid_element_id\n        AND meter.grid_id = geds.grid_id\n        AND geds.type = 'CONSUMER'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE meter.type = 'Meter';\n")
 
 
 # **Consumption Data**
@@ -102,7 +102,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW mete
 # In[7]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_consumption AS\nSELECT meter.grid_id,\n        meter.grid_element_id,\n        meter.friendly_id,\n        timestamp,\n        value AS kWh\nFROM meter_data_source meter\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = meter.grid_id\n    AND gem.grid_element_id = meter.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'CONSUMER';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW meter_consumption AS\nSELECT meter.grid_id,\n        meter.grid_element_id,\n        meter.friendly_id,\n        timestamp,\n        value AS kWh\nFROM meter_data_source meter\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = meter.grid_id\n    AND gem.grid_element_id = meter.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'CONSUMER';\n")
 
 
 # **Summary**
@@ -111,7 +111,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW mete
 # In[8]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kWh) AS kWh, MIN(timestamp) AS start_timerange, MAX(timestamp) AS end_timerange\n    FROM meter_consumption\n)\nSELECT name, value FROM (\n    SELECT 1 AS idx, 'Meters Found' AS name, (SELECT COUNT(DISTINCT grid_element_id) FROM meter_data_source)::text AS value\n    UNION\n    SELECT 2, 'Meters w/ Datasources', (SELECT COUNT(DISTINCT grid_element_id) FROM meter_data_source WHERE grid_element_data_source_id IS NOT NULL)::text\n    UNION\n    SELECT 3, 'Common DS Timerange', (SELECT CONCAT(MAX(start_time), ' - ',  MIN(end_time)) FROM meter_data_source)::text\n    UNION\n    SELECT 4, 'Common Timeseries Timerange', (SELECT CONCAT(start_timerange, ' - ', end_timerange) FROM ts_stats)::text\n    UNION\n    SELECT 5, 'Total Consumption', (SELECT kwh FROM ts_stats)::text\n) x ORDER BY idx\n;")
+get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kWh) AS kWh, MIN(timestamp) AS start_timerange, MAX(timestamp) AS end_timerange\n    FROM meter_consumption\n)\nSELECT name, value FROM (\n    SELECT 1 AS idx, 'Meters Found' AS name, (SELECT COUNT(DISTINCT grid_element_id) FROM meter_data_source)::text AS value\n    UNION\n    SELECT 2, 'Meters w/ Datasources', (SELECT COUNT(DISTINCT grid_element_id) FROM meter_data_source WHERE grid_element_data_source_id IS NOT NULL)::text\n    UNION\n    SELECT 3, 'Common DS Timerange', (SELECT CONCAT(MAX(start_time), ' - ',  MIN(end_time)) FROM meter_data_source)::text\n    UNION\n    SELECT 4, 'Common Timeseries Timerange', (SELECT CONCAT(start_timerange, ' - ', end_timerange) FROM ts_stats)::text\n    UNION\n    SELECT 5, 'Total Consumption', (SELECT kwh FROM ts_stats)::text\n) x ORDER BY idx\n;\n")
 
 
 # **Monthly Time Series**
@@ -121,7 +121,7 @@ get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kW
 
 
 # Save to a Python variable first.
-monthly_meter = get_ipython().run_line_magic('sql', "SELECT friendly_id,                             date_trunc('month', timestamp)::date AS month,                             AVG(kWh) AS kwh                         FROM meter_consumption                         GROUP BY friendly_id, month;")
+monthly_meter = get_ipython().run_line_magic('sql', "SELECT friendly_id,                              date_trunc('month', timestamp)::date AS month,                              AVG(kWh) AS kwh                          FROM meter_consumption                          GROUP BY friendly_id, month;")
                     
 # Sort the data by date saved as `month`.
 df_meter = monthly_meter.DataFrame().sort_values('month')
@@ -146,7 +146,7 @@ px.line(df_meter, x='month', y='kwh',
 # *High level approach*
 # - Create a temporary view `grid_element_metric`, containing information on SCADAs for grid elements and convenient access to the actual data.
 # - The `grid_get_sources()` function is used for switches that are top feeders of a specified element.
-# - Time series are retrieved using the `ts_source_select()` function.
+# - Time series are retrieved using the `ts_data_source_select()` function.
 
 # **Grid Element Data**
 # * Create a temporary view `grid_element_metric`.
@@ -156,7 +156,7 @@ px.line(df_meter, x='month', y='kwh',
 # In[11]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;')
+get_ipython().run_cell_magic('sql', '', '\nCREATE OR REPLACE TEMPORARY VIEW grid_element_metric AS\n    SELECT grid_id,\n            grid_element_id,\n            phases,\n            type,\n            provider,\n            direction,\n            friendly_id,\n            metric_key AS metric,\n            valid,\n            timestamp,\n            value\n    FROM grid_element_data_source geds\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    LEFT JOIN ts_data_source_select(grid_element_data_source_id, metric_key) AS ts\n        ON true;\n')
 
 
 # **Sources of a Grid** 
@@ -174,7 +174,7 @@ grid_element_id = input('Grid Element Id: ') # line_segment_57
 # In[13]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_data_source AS\n    SELECT scada.grid_element_id,\n            scada.grid_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            geds.grid_element_data_source_id,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true') AS scada\n        LEFT JOIN grid_element_data_source geds\n            ON scada.grid_element_id = geds.grid_element_id\n            AND scada.grid_id = geds.grid_id\n            AND geds.type = 'SENSOR'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE scada.type = 'CircuitBreaker';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_data_source AS\n    SELECT scada.grid_element_id,\n            scada.grid_id,\n            geds.friendly_id,\n            geds.provider,\n            metric_key as metric,\n            geds.grid_element_data_source_id,\n            lower(geds.valid) as start_time,\n            upper(geds.valid) as end_time\n    FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true') AS scada\n        LEFT JOIN grid_element_data_source geds\n            ON scada.grid_element_id = geds.grid_element_id\n            AND scada.grid_id = geds.grid_id\n            AND geds.type = 'SENSOR'\n    JOIN UNNEST(geds.metrics::TEXT[]) AS metric_key\n        ON true\n    WHERE scada.type = 'CircuitBreaker';\n")
 
 
 # **SCADA Time Series**
@@ -183,7 +183,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scad
 # In[14]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_time_series AS\nSELECT gem.type, \n        gem.grid_id,\n        gem.grid_element_id ,\n        scada.friendly_id,\n        timestamp,\n        value AS kWh\nFROM scada_data_source scada\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = scada.grid_id\n    AND gem.grid_element_id = scada.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'SENSOR';")
+get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scada_time_series AS\nSELECT gem.type, \n        gem.grid_id,\n        gem.grid_element_id ,\n        scada.friendly_id,\n        timestamp,\n        value AS kWh\nFROM scada_data_source scada\nLEFT JOIN grid_element_metric gem\n    ON gem.grid_id = scada.grid_id\n    AND gem.grid_element_id = scada.grid_element_id\nWHERE gem.metric = 'kWh'\n   AND gem.type = 'SENSOR';\n")
 
 
 # **Summary**
@@ -192,7 +192,7 @@ get_ipython().run_cell_magic('sql', '', "\nCREATE OR REPLACE TEMPORARY VIEW scad
 # In[15]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kWh) AS kWh, MIN(timestamp) AS start_timerange, MAX(timestamp) AS end_timerange\n    FROM scada_time_series\n)\nSELECT name, value FROM (\n    SELECT 1 AS idx, 'SCADAs Found' AS name, (SELECT COUNT(DISTINCT grid_element_id) FROM scada_data_source)::text AS value\n    UNION\n    SELECT 2, 'SCADAs w/ Datasources', (SELECT COUNT(DISTINCT grid_element_id) FROM scada_data_source WHERE grid_element_data_source_id IS NOT NULL)::text\n    UNION\n    SELECT 3, 'Common DS Timerange', (SELECT CONCAT(MAX(start_time), MIN(end_time)) FROM scada_data_source)::text\n    UNION\n    SELECT 4, 'Common Timeseries Timerange', (SELECT CONCAT(start_timerange, ' - ', end_timerange) FROM ts_stats)::text\n    UNION\n    SELECT 5, 'Total Distribution', (SELECT kWh FROM ts_stats)::text\n) x\nORDER BY idx")
+get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kWh) AS kWh, MIN(timestamp) AS start_timerange, MAX(timestamp) AS end_timerange\n    FROM scada_time_series\n)\nSELECT name, value FROM (\n    SELECT 1 AS idx, 'SCADAs Found' AS name, (SELECT COUNT(DISTINCT grid_element_id) FROM scada_data_source)::text AS value\n    UNION\n    SELECT 2, 'SCADAs w/ Datasources', (SELECT COUNT(DISTINCT grid_element_id) FROM scada_data_source WHERE grid_element_data_source_id IS NOT NULL)::text\n    UNION\n    SELECT 3, 'Common DS Timerange', (SELECT CONCAT(MAX(start_time), MIN(end_time)) FROM scada_data_source)::text\n    UNION\n    SELECT 4, 'Common Timeseries Timerange', (SELECT CONCAT(start_timerange, ' - ', end_timerange) FROM ts_stats)::text\n    UNION\n    SELECT 5, 'Total Distribution', (SELECT kWh FROM ts_stats)::text\n) x\nORDER BY idx\n")
 
 
 # **Monthly Time Series**
@@ -202,7 +202,7 @@ get_ipython().run_cell_magic('sql', '', "\nWITH ts_stats AS (\n    SELECT SUM(kW
 
 
 # Save to a Python variable first.
-monthly_scada = get_ipython().run_line_magic('sql', "SELECT friendly_id,                             date_trunc('month', timestamp)::date AS month,                             AVG(kWh) AS kwh                         FROM scada_time_series                         GROUP BY friendly_id, month;")
+monthly_scada = get_ipython().run_line_magic('sql', "SELECT friendly_id,                              date_trunc('month', timestamp)::date AS month,                              AVG(kWh) AS kwh                          FROM scada_time_series                          GROUP BY friendly_id, month;")
                     
 # Sort the data by date saved as `month`.
 df_scada = monthly_scada.DataFrame().sort_values('month')
