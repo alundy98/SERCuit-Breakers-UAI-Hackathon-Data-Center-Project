@@ -88,16 +88,25 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
   * MCB (breaker) Value
   * Voltage Level
   * Parent Transformer
-  * Maximal Demand
+  * Maximal Demand and Maximal Demand Unit
   * Meter Number
   * Address
   * Is Critical
   * Tariff ID
+  * Interval
+  * Meter Type
+  * Critical
+  * Read Type
 * Transformer
   * Load Loss & No Load Loss
   * kVA Rating
   * Voltage Level
   * Commission Date
+  * Ownership
+  * Primary Voltage
+  * Maintenance Type
+  * Installation Type
+  * Secondary Voltage
 * EV Charger
   * Make Model
   * Connector Type
@@ -106,6 +115,7 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
   * Is DC Charger
   * Max Current & Max Voltage
   * Charging Level
+  * Voltage Level
 * Photovoltaic
   * Module
   * Panel Area
@@ -116,6 +126,11 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
   * Inverter
   * Racking
   * Tilt & Azimuth Angle
+  * Voltage Level
+  * Number of Panels
+  * Panel Make and Model
+  * Annual and 25 Years Degradations
+  * Generation Capacity
 * Line Segment
   * System
   * Phase to Phase Voltage
@@ -125,6 +140,8 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
   * Materials
   * Rating A
   * Is Operation Status
+  * Line Length
+  * Voltage Level
 
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | History |
@@ -133,7 +150,7 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
 | Meter | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
 | Meter | V | hourly | 3-phase aggregate* | Jan 2021 - now |
 | Solar | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
-| EV Charger | kWh | hourly | per-phase| Jan 2021 - now |
+| EV Charger | kWh | minutely | per-phase| Jan 2021 - now |
 
 *3-phase aggregate for three-phase grid elements, single phase for single-phase grid elements.
 

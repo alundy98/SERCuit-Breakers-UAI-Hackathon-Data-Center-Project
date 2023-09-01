@@ -39,10 +39,7 @@ pd.set_option('display.max_columns', None)
 # In[2]:
 
 
-**Connection**
-
-Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
-<span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>edm_address = getpass.getpass(prompt='EDM server address: ')
+edm_address = getpass.getpass(prompt='EDM server address: ')
 
 print('\nEDM login information')
 edm_name = getpass.getpass(prompt='Username: ')
