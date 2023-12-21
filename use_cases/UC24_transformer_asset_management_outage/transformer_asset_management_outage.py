@@ -7,7 +7,7 @@
 # * Mirror existing TGI functionalities in a notebook format.
 # * Demonstrate a use case: Transformer Asset Management.
 # 
-# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](../usecase_descriptions/UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
+# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
 
 # ## Set up
 
@@ -66,13 +66,13 @@ grid_element_id = 'line_segment_5'
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid \nWHERE grid_id = '{grid_id}';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid \nWHERE grid_id = '{grid_id}';\n")
 
 
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downstream('{grid_id}','{grid_element_id}') \nWHERE type = 'Meter';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downstream('{grid_id}','{grid_element_id}') \nWHERE type = 'Meter';\n")
 
 
 # *Note*: The `grid_id` for grids can be found in the `grid` view, and the `grid_element_id` for grid elements can be found in the `grid_element` view.
@@ -85,7 +85,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(*) \nFROM grid_get_downs
 
 
 # Get the transformer information.
-result = get_ipython().run_line_magic('sql', "SELECT *,                 ST_Y(geometry) as geo_latitude,                 ST_X(geometry) as geo_longitude             FROM grid_get_downstream('{grid_id}','{grid_element_id}')             WHERE type LIKE 'Transformer';")
+result = get_ipython().run_line_magic('sql', "SELECT *,                  ST_Y(geometry) as geo_latitude,                  ST_X(geometry) as geo_longitude              FROM grid_get_downstream('{grid_id}','{grid_element_id}')              WHERE type LIKE 'Transformer';")
 
 # Turn the query result into a dataframe to work easily in Python.
 df = result.DataFrame()
@@ -105,7 +105,8 @@ df.head()
 
 
 # Create a dataframe of counts by phases.
-df_phases_cts = df[['grid_element_id','phases']].groupby('phases').count().reset_index()                 .rename(columns={'grid_element_id':'count'})
+df_phases_cts = df[['grid_element_id','phases']].groupby('phases').count().reset_index() \
+                .rename(columns={'grid_element_id':'count'})
 
 # Create a pie chart.
 fig = px.pie(df_phases_cts, 
@@ -119,7 +120,7 @@ fig.update_traces(textposition='inside', textinfo='percent+label+value')
 
 
 # Calculate age as the number of years passed since commission date to today.
-df['age'] = (pd.to_datetime('now') - pd.to_datetime(df['commission_date'])) / np.timedelta64(1,'Y')
+df['age'] = (pd.to_datetime('now') - pd.to_datetime(df['commission_date'])) / np.timedelta64(1,'D') / 365
 
 # Create a histogram of transformer age.
 fig = px.histogram(df['age'], x='age',
@@ -180,9 +181,3 @@ fig.show()
 
 
 # ---
-
-# In[ ]:
-
-
-
-

@@ -17,7 +17,7 @@
 # 
 # Utility companies can use the results of such analysis to determine if it is possible to connect more loads in this section of the grid, analyze the distribution of resources, and increase grid efficiency.
 # 
-# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC17-01 - Actual vs. Contracted Grid Capacity Analysis](../usecase_descriptions/UC17-01%20-%20Actual%20vs.%20Contracted%20Grid%20Capacity%20Analysis.pdf) document.
+# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC17-01 - Actual vs. Contracted Grid Capacity Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC17-01%20-%20Actual%20vs.%20Contracted%20Grid%20Capacity%20Analysis.pdf) document.
 
 # ---
 

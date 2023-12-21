@@ -15,7 +15,7 @@
 # 
 # Results of such analysis will provide valuable insights for decision-making on increasing capacity, managing transformer bottleneck, and permitting additional EV chargers. 
 # 
-# For more details about transformer capacity analysis for EV charging and how it can be analyzed using Awesense's platform, please refer to the [UC04-01 - Transformer Capacity Analysis for EV Charging](../usecase_descriptions/UC04-01%20-%20Transformer%20Capacity%20Analysis%20for%20EV%20Charging.pdf) document.
+# For more details about transformer capacity analysis for EV charging and how it can be analyzed using Awesense's platform, please refer to the [UC04-01 - Transformer Capacity Analysis for EV Charging](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC04-01%20-%20Transformer%20Capacity%20Analysis%20for%20EV%20Charging.pdf) document.
 
 # ## Setup 
 
@@ -151,7 +151,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[5]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                         meta,                         phases                FROM grid_element                WHERE grid_id = '{grid_id}'                    AND type = 'Transformer';")
+result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                          meta,                          phases                 FROM grid_element                 WHERE grid_id = '{grid_id}'                     AND type = 'Transformer';")
 
 # Convert the results to a data frame.
 df_transformers = result.DataFrame()
@@ -184,7 +184,7 @@ grid_element_id = input('Enter transformer ID: ') # transformer_92
 # In[7]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                         type,                         meta                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')                 WHERE type = 'Meter';")
+result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                          type,                          meta                  FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')                  WHERE type = 'Meter';")
 
 # Convert the results to a data frame.
 df_meters = result.DataFrame()
@@ -206,7 +206,7 @@ df_meters
 # In[8]:
 
 
-result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                         tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                         SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as "total_kW", ge.meta                 FROM grid_element ge                 JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                    ON ggd.grid_id = ge.grid_id                 JOIN grid_element_data_source geds_c                     ON geds_c.grid_element_id = ggd.grid_element_id                     AND geds_c.type = \'CONSUMER\'                 JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                     ON true                 LEFT JOIN grid_element_data_source geds_p                     ON geds_p.grid_element_id = geds_c.grid_element_id                     AND geds_p.type = \'PRODUCER\'                 LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                     ON tdss_p.timestamp = tdss_c.timestamp                 WHERE ge.grid_element_id = \'{grid_element_id}\'                     AND ggd.type = \'Meter\'                 GROUP BY ge.grid_element_id, tdss_c.timestamp, ge.meta                 ORDER by 2;')
+result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                          tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                          SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as "total_kW", ge.meta                  FROM grid_element ge                  JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                     ON ggd.grid_id = ge.grid_id                  JOIN grid_element_data_source geds_c                      ON geds_c.grid_element_id = ggd.grid_element_id                      AND geds_c.type = \'CONSUMER\'                  JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                      ON true                  LEFT JOIN grid_element_data_source geds_p                      ON geds_p.grid_element_id = geds_c.grid_element_id                      AND geds_p.type = \'PRODUCER\'                  LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                      ON tdss_p.timestamp = tdss_c.timestamp                  WHERE ge.grid_element_id = \'{grid_element_id}\'                      AND ggd.type = \'Meter\'                  GROUP BY ge.grid_element_id, tdss_c.timestamp, ge.meta                  ORDER by 2;')
 
 # Convert the results to a data frame.
 df_transformer_load = result.DataFrame()
@@ -259,7 +259,14 @@ df_transformer_load = calc_number_of_evs(df_transformer_load, ev_max_power)
 
 
 # Description of the plots above. 
-md("The plot shows the number of EV chargers that could be installed and operated in this section of the grid.For the example with `transformer_92`, this number tends to be higher during the summer when the load is reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, if there are PV installations present in this section of the grid, the fluctuation in the number of EV chargers that could be installed and operated without overloading the transformers becomes more pronounced for each day.<br><br>Based on this analysis, the number of EV chargers that can be installed and operated year round (in the case of `transformer_92` and EV charger with a maximum power of {} kW) is {}.".format(ev_max_power, 
+md("The plot shows the number of EV chargers that could be installed and operated in this section of the grid.\
+For the example with `transformer_92`, this number tends to be higher during the summer when the load is \
+reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, \
+if there are PV installations present in this section of the grid, the fluctuation in the number of \
+EV chargers that could be installed and operated without overloading the transformers becomes more \
+pronounced for each day.<br><br>\
+Based on this analysis, the number of EV chargers that can be installed and operated year round \
+(in the case of `transformer_92` and EV charger with a maximum power of {} kW) is {}.".format(ev_max_power, 
                                                                                               '%.0f' % df_transformer_load['EVs'].min() ))
 
 

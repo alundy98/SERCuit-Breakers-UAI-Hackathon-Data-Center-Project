@@ -13,15 +13,13 @@ Each folder contains an individual README.md file with more details specific to 
 
 
 ## Getting Started
-While highly portable, all the code in this repository is set up to run out of the box against Awesense's `Sandbox` tier 1 environment.
+The fastest way to get started with this repo is to make use of the Awesense Sandbox Environment. `Sandbox` is a collection of Awesense servers (for tiers 1, 2&3) where customers, partners and others can use the functionality of the Awesense platform, including APIs and the True Grid Intelligence (TGI) web app, to explore and create applications and solutions for the grid ecosystem using realistic simulated data. 
 
-`Sandbox` is a collection of Awesense servers (for tiers 1, 2&3) where customers, partners and others can use the functionality of the Awesense platform, including APIs and the True Grid Intelligence (TGI) web app, to explore and create applications and solutions for the grid ecosystem using realistic simulated data. 
-
-Unless otherwise specified, the notebooks in this repo were run and their outputs saved using input parameters (for example, grid ID, transformer IDs) corresponding to the `Sandbox` tier 1 server dataset.  Using other servers might require entering different parameters and produce results different from those presented in these notebooks.
+While highly portable, all the code in this repository can be run out of the box against one of the `Sandbox` servers, and, unless otherwise specified, the notebooks in this repo were run and their outputs saved using input parameters (for example, grid ID, transformer IDs) corresponding to the `Sandbox` tier 1 server dataset. With new releases, more notebooks will run out of the box against the richer datasets present only in the tier 2 & 3 servers (for example, the code snippet meter_ders_matrix). Using other servers might require entering different parameters and produce results different from those presented in these notebooks.
 
 NOTE: While notebooks were saved to include chart outputs, GitHub does not render them. Once you check out the notebooks locally and open them in Jupyter, you may have to click the "Not Trusted" button on the upper right to tell Jupyter to trust the notebook and render the plots. Otherwise, you will need to re-run the notebooks yourself to regenerate the plots. Note also that for charts involving time series for which the queries retrieved data up to the "present" moment, re-running the notebook will always produce different results from the saved version, since the "present" will have advanced and more data will be retrieved.
 
-If you do not already have account credentials for the `Sandbox` servers, please contact api@awesense.com. 
+If you do not already have account credentials for the `Sandbox` servers or would like to upgrade from tier 1 to tier 2 or 3, please contact api@awesense.com. 
 
 If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutorials) is a great place to start to ensure that your EDM credentials (whether for `Sandbox` or some other server) are working and to familiarize yourself with Awesense's EDM platform. <span style='color:red'> **Please do not store the credentials anywhere in the code, nor share them with anyone else.**</span>
 
@@ -45,14 +43,16 @@ Please refer to the [use_case's README](/use_cases/README.md) for instructions o
 
 ## Sandbox Dataset
 
-Below is a summary of data types that are currently available in Awesense's Sandbox tier 1 server, as well as data types that are upcoming.
+Below is a summary of data types that are currently available in Awesense's Sandbox servers, as well as data types that are upcoming.
 
-Additional documentation on data types of Awesense's Energy Data Model and the EDM SQL interface used by the notebooks in this repo can be consulted on the `Sandbox` server once logging in [here](https://sandbox.awesense.com/docs/index.html).
+Additional information on data types of Awesense's Energy Data Model and the EDM SQL interface used by the notebooks in this repo can be consulted in the documentation available on all servers once logging in via Awesense's True Grid Intelligence (TGI) web app UI. 
 
 ### Present Data 
-Below are data currently in place. There is one grid, called `awefice`, that is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology.
+Below are the data currently in place. Tier 1 contains one grid, called `awefice`, which is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology. Tiers 2 & 3 contain an additional, larger grid called `North Central Zone`. This grid is located in Ohio and has fourty six-feeders, over fifteen thousand transformers, and over twenty thousand meters.  
 
-NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hundreds of thousands of elements. For a description of its contents and access to it please contact api@awesense.com.
+
+For a detailed description of the grids' contents and access, please contact api@awesense.com.
+
 
 **GIS Grid Elements**
 * Line Segment
@@ -71,7 +71,7 @@ NOTE: The `Sandbox` tiers 2&3 server contains an additional, larger grid with hu
 * Busbar
 * EV Charger
 * Photovoltaic
-* Battery
+* Battery (currently only available on `awefice` grid)
 
 **Common GIS Grid Element Attributes**
 * Geo-coordinates

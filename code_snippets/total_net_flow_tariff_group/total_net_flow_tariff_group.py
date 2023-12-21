@@ -28,7 +28,7 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import datetime
-from backports.zoneinfo import ZoneInfo
+import pytz
 
 
 # **Connection**
@@ -69,8 +69,10 @@ grid_id = input('Enter grid ID: ') # awefice
 year = input('Enter year: ') # 2021
 
 # Get the start and end dates for the year and localize them.
-year_start = datetime.datetime.min.replace(year = int(year), tzinfo=ZoneInfo("America/Vancouver"))
-year_end = datetime.datetime.max.replace(year = int(year), tzinfo=ZoneInfo("America/Vancouver"))
+year_start = datetime.datetime.min.replace(year = int(year))
+year_start = pytz.timezone('America/Vancouver').localize(year_start)
+year_end = datetime.datetime.max.replace(year = int(year))
+year_end = pytz.timezone('America/Vancouver').localize(year_end)
 
 # Convert it to string. 
 timerange_tz = f'[ {year_start} , {year_end} ]'

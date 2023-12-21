@@ -72,7 +72,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as number_of_meters,\n    phases as phase\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\nGROUP  BY phases;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as number_of_meters,\n    phases as phase\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\nGROUP  BY phases;\n")
 
 
 # Second, save the query results to a dataframe for visualization purposes. 
@@ -80,7 +80,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as numb
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT COUNT(grid_element_id) as number_of_meters,\n    phases as phase\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\nGROUP  BY phases\nORDER BY LENGTH(phases) desc, phases;")
+get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT COUNT(grid_element_id) as number_of_meters,\n    phases as phase\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\nGROUP  BY phases\nORDER BY LENGTH(phases) desc, phases;\n")
 
 
 # In[6]:
@@ -109,7 +109,7 @@ fig.show()
 # In[7]:
 
 
-get_ipython().run_cell_magic('sql', '', "SELECT COUNT(grid_element_id) as number_of_meters, \n    meta ->> 'type_of_consumer' as consumer_type \nFROM grid_element \nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter' \nGROUP  BY (meta ->> 'type_of_consumer') \nORDER BY number_of_meters desc;")
+get_ipython().run_cell_magic('sql', '', "SELECT COUNT(grid_element_id) as number_of_meters, \n    meta ->> 'type_of_consumer' as consumer_type \nFROM grid_element \nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter' \nGROUP  BY (meta ->> 'type_of_consumer') \nORDER BY number_of_meters desc;\n")
 
 
 # Second, save the query results to a dataframe for visualization purposes. 
@@ -117,7 +117,7 @@ get_ipython().run_cell_magic('sql', '', "SELECT COUNT(grid_element_id) as number
 # In[8]:
 
 
-get_ipython().run_cell_magic('sql', 'meters <<', "SELECT COUNT(grid_element_id) as number_of_meters, \n    meta ->> 'type_of_consumer' as consumer_type \nFROM grid_element \nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter' \nGROUP  BY (meta ->> 'type_of_consumer') \nORDER BY number_of_meters desc;")
+get_ipython().run_cell_magic('sql', 'meters <<', "SELECT COUNT(grid_element_id) as number_of_meters, \n    meta ->> 'type_of_consumer' as consumer_type \nFROM grid_element \nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter' \nGROUP  BY (meta ->> 'type_of_consumer') \nORDER BY number_of_meters desc;\n")
 
 
 # In[9]:
@@ -146,7 +146,7 @@ fig.show()
 # In[10]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as number_of_meters, \n    phases, \n    meta ->> 'type_of_consumer' as type_consumer\nFROM grid_element\nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter'\nGROUP  BY (meta ->> 'type_of_consumer'), phases\nORDER BY LENGTH(phases) desc, phases, type_consumer;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as number_of_meters, \n    phases, \n    meta ->> 'type_of_consumer' as type_consumer\nFROM grid_element\nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter'\nGROUP  BY (meta ->> 'type_of_consumer'), phases\nORDER BY LENGTH(phases) desc, phases, type_consumer;\n")
 
 
 # Second, save the query results to a dataframe for visualization purposes.
@@ -154,7 +154,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT COUNT(grid_element_id) as numb
 # In[11]:
 
 
-get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT COUNT(grid_element_id) as number_of_meters, \n    phases, \n    meta ->> 'type_of_consumer' as type_consumer\nFROM grid_element\nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter'\nGROUP  BY (meta ->> 'type_of_consumer'), phases\nORDER BY LENGTH(phases) desc, phases, type_consumer;")
+get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT COUNT(grid_element_id) as number_of_meters, \n    phases, \n    meta ->> 'type_of_consumer' as type_consumer\nFROM grid_element\nWHERE grid_id = '{grid_id}' \n    AND type = 'Meter'\nGROUP  BY (meta ->> 'type_of_consumer'), phases\nORDER BY LENGTH(phases) desc, phases, type_consumer;\n")
 
 
 # In[12]:

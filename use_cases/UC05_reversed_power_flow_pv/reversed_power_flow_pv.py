@@ -14,7 +14,7 @@
 # 
 # Results of such analysis can provide valuable insights for decision-making on PV connection permits and grid upgrades or planning activities.  
 # 
-# For more details about reversed power flow and how it can be analyzed using Awesense's platform, please refer to the [UC05-01 - Reversed Power Flow and PV Capacity Analysis](../usecase_descriptions/UC05-01%20-%20Reversed%20Power%20Flow%20and%20PV%20Capacity%20Analysis.pdf)
+# For more details about reversed power flow and how it can be analyzed using Awesense's platform, please refer to the [UC05-01 - Reversed Power Flow and PV Capacity Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC05-01%20-%20Reversed%20Power%20Flow%20and%20PV%20Capacity%20Analysis.pdf)
 # 
 # document.
 
@@ -197,7 +197,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[5]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                         meta,                         phases                FROM grid_element                WHERE grid_id = '{grid_id}'                    AND type = 'Transformer';")
+result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                          meta,                          phases                 FROM grid_element                 WHERE grid_id = '{grid_id}'                     AND type = 'Transformer';")
 
 # Turn the query result into a dataframe to work easily in Python.
 df_transformer = result.DataFrame()
@@ -231,7 +231,7 @@ grid_element_id = input('Enter transformer ID: ') # transformer_92
 
 
 # Find all the meters downstream of the transformer.
-result = get_ipython().run_line_magic('sql', "SELECT ggd.grid_element_id,                         ggd.type,                         ggd.meta                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                 WHERE ggd.type = 'Meter';")
+result = get_ipython().run_line_magic('sql', "SELECT ggd.grid_element_id,                          ggd.type,                          ggd.meta                  FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                  WHERE ggd.type = 'Meter';")
 
 # Turn the query result into a dataframe to work easily in Python.
 df_meter = result.DataFrame()
@@ -255,7 +255,7 @@ df_meter
 
 
 # Aggregate the load of all the meters downstream from the specific transformer. 
-result = get_ipython().run_line_magic('sql', "SELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,                         SUM(tdss.value) as total_kW                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                 JOIN grid_element_data_source geds                     ON geds.grid_id = ggd.grid_id                     AND geds.grid_element_id = ggd.grid_element_id                 JOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh') tdss                     ON true                 WHERE ggd.grid_id = '{grid_id}'                     AND ggd.type = 'Meter'                     AND geds.type = 'CONSUMER'                 GROUP BY tdss.timestamp                 ORDER by 1;")
+result = get_ipython().run_line_magic('sql', "SELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,                          SUM(tdss.value) as total_kW                  FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                  JOIN grid_element_data_source geds                      ON geds.grid_id = ggd.grid_id                      AND geds.grid_element_id = ggd.grid_element_id                  JOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh') tdss                      ON true                  WHERE ggd.grid_id = '{grid_id}'                      AND ggd.type = 'Meter'                      AND geds.type = 'CONSUMER'                  GROUP BY tdss.timestamp                  ORDER by 1;")
 
 # Convert the results to a dataframe.
 df_transformer_load = result.DataFrame()

@@ -16,7 +16,7 @@
 # 
 # The results of such analysis can be used to increase customer satisfaction as it might lower customers' capacity payments or can help the Grid Planning department to better understand the real grid capacity constraints.
 # 
-# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC13-01 - Master Circuit Breaker Value vs. Measured Values Analysis](../usecase_descriptions/UC13-01%20-%20Master%20Circuit%20Breaker%20Value%20vs.%20Measured%20Values%20Analysis.pdf) document.
+# For more details about master circuit breaker analysis and how it can be analyzed using Awesense's platform, please refer to the [UC13-01 - Master Circuit Breaker Value vs. Measured Values Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC13-01%20-%20Master%20Circuit%20Breaker%20Value%20vs.%20Measured%20Values%20Analysis.pdf) document.
 
 # ---
 
@@ -155,7 +155,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', 'result_meters <<', "\nSELECT ge2.grid_element_id as meter_id, \n    ge2.phases,\n    ge2.meta ->> 'maximal_demand' as maximal_demand,\n    ge2.meta ->> 'parent_transformer_id' as parent_transformer_id,\n    ge1.meta ->> 'secondary_voltage' as secondary_voltage,\n    st_x(ge2.geometry) as longitude, \n    st_y(ge2.geometry) as latitude, \n    ggs.grid_element_id as top_feeder_transformer\nFROM grid_element ge1\nINNER JOIN grid_element ge2\n    ON ge1.grid_element_id = ge2.meta ->> 'parent_transformer_id' \nJOIN grid_get_sources('{grid_id}', ge2.grid_element_id, 'true') ggs\n    ON true \nWHERE ge2.type = 'Meter'\n    AND ggs.type = 'Transformer'\n    AND ggs.is_producer = true\nORDER BY top_feeder_transformer, LENGTH(ge2.phases), ge2.phases, \n        cast(substring(ge2.grid_element_id, 3, 2) as int) asc;")
+get_ipython().run_cell_magic('sql', 'result_meters <<', "\nSELECT ge2.grid_element_id as meter_id, \n    ge2.phases,\n    ge2.meta ->> 'maximal_demand' as maximal_demand,\n    ge2.meta ->> 'parent_transformer_id' as parent_transformer_id,\n    ge1.meta ->> 'secondary_voltage' as secondary_voltage,\n    st_x(ge2.geometry) as longitude, \n    st_y(ge2.geometry) as latitude, \n    ggs.grid_element_id as top_feeder_transformer\nFROM grid_element ge1\nINNER JOIN grid_element ge2\n    ON ge1.grid_element_id = ge2.meta ->> 'parent_transformer_id' \nJOIN grid_get_sources('{grid_id}', ge2.grid_element_id, 'true') ggs\n    ON true \nWHERE ge2.type = 'Meter'\n    AND ggs.type = 'Transformer'\n    AND ggs.is_producer = true\nORDER BY top_feeder_transformer, LENGTH(ge2.phases), ge2.phases, \n        cast(substring(ge2.grid_element_id, 3, 2) as int) asc;\n")
 
 
 # Calculate meters' Master Circuit Breaker values
@@ -170,9 +170,11 @@ df_meters = result_meters.DataFrame()
 df_meters = df_meters.astype({'phases': 'str', 'maximal_demand':'int', 'secondary_voltage': 'int'})
 
 # Calculate the master circuit breaker values based on the meters' phase. 
-df_meters.loc[df_meters['phases'].isin(['A','B','C']), 'master_circuit_kW']                 =((df_meters['secondary_voltage']/math.sqrt(3))*df_meters['maximal_demand']*0.98/1000)
+df_meters.loc[df_meters['phases'].isin(['A','B','C']), 'master_circuit_kW'] \
+                =((df_meters['secondary_voltage']/math.sqrt(3))*df_meters['maximal_demand']*0.98/1000)
 
-df_meters.loc[df_meters['phases'].isin(['ABC']), 'master_circuit_kW']                 =(math.sqrt(3)*df_meters['secondary_voltage']*df_meters['maximal_demand']*0.98/1000)
+df_meters.loc[df_meters['phases'].isin(['ABC']), 'master_circuit_kW'] \
+                =(math.sqrt(3)*df_meters['secondary_voltage']*df_meters['maximal_demand']*0.98/1000)
 
 # Set up a multi-index data frame to display the transformers, their associated meters, 
 # and master circuit breaker values.
@@ -197,7 +199,7 @@ bar_plot(df_meters.reset_index(), 'meter_id', 'master_circuit_kW',
 # In[8]:
 
 
-get_ipython().run_cell_magic('sql', 'result_system <<', '\nSELECT tdss.timestamp at time zone \'America/Vancouver\' as timestamp,\n        ge.grid_element_id as meter_id,\n        tdss.value as "kWh",\n        geds.type\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss\n    ON TRUE\nWHERE geds.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\'\n    AND geds.type = \'CONSUMER\'\nORDER BY tdss.timestamp;')
+get_ipython().run_cell_magic('sql', 'result_system <<', '\nSELECT tdss.timestamp at time zone \'America/Vancouver\' as timestamp,\n        ge.grid_element_id as meter_id,\n        tdss.value as "kWh",\n        geds.type\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss\n    ON TRUE\nWHERE geds.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\'\n    AND geds.type = \'CONSUMER\'\nORDER BY tdss.timestamp;\n')
 
 
 # Calculate the ratio of meters' hourly maximum net consumer load to their Master Circuit Breaker values

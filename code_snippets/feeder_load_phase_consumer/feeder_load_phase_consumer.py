@@ -26,12 +26,12 @@
 
 import getpass
 import urllib.parse
-from backports.zoneinfo import ZoneInfo
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import plotly.express as px
 import numpy as np
+import pytz
 
 
 # **Connection**
@@ -118,8 +118,8 @@ end_date = input('Enter end date: ') # 2022-11-15 00:00:00
 
 
 # Convert the end date to datetime, round down to the hour, and localize it.
-end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S').replace(microsecond=0, second=0, minute=0, 
-                                                                    tzinfo=ZoneInfo("America/Vancouver"))
+end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S').replace(microsecond=0, second=0, minute=0)                                                                  
+end_date = pytz.timezone('America/Vancouver').localize(end_date)
 
 # Define the timestamp for the past day, month, and year. 
 past_day = end_date - timedelta(days=1)
@@ -193,7 +193,7 @@ end_date_str = f'{end_date}'
 
 # Filter the results to include the net flow from the past day and aggregate it by consumer type. 
 df_past_day = feeder_flow.loc[(feeder_flow['timestamp']>=past_day_str) 
-                              & (feeder_flow['timestamp']<=end_date)].groupby('consumer_type')\
+                              & (feeder_flow['timestamp']<=end_date), ['kWh', 'consumer_type']].groupby('consumer_type')\
                                 .sum().round(2).reset_index()
 
 # Display the results.
@@ -220,7 +220,7 @@ past_month_str = f'{past_month}'
 
 # Filter the results to include the net flow from the past month and aggregate it by consumer type. 
 df_past_month = feeder_flow.loc[(feeder_flow['timestamp']>=past_month_str) 
-                                & (feeder_flow['timestamp']<=end_date)].groupby('consumer_type')\
+                                & (feeder_flow['timestamp']<=end_date),['kWh', 'consumer_type']].groupby('consumer_type')\
                                     .sum().round(2).reset_index()
 
 # Display the results.
@@ -245,7 +245,7 @@ past_year_str = f'{past_year}'
 
 # Filter the results to include the net flow from the past year and aggregate it by consumer type. 
 df_past_year = feeder_flow.loc[(feeder_flow['timestamp']>=past_year_str) 
-                               & (feeder_flow['timestamp']<=end_date)].groupby('consumer_type')\
+                               & (feeder_flow['timestamp']<=end_date),['kWh', 'consumer_type']].groupby('consumer_type')\
                                     .sum().round(2).reset_index()
 
 # Display the results.

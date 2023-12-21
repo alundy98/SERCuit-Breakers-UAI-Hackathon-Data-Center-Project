@@ -84,7 +84,7 @@ grid_element_id = input('Enter transformer ID: ') # transformer_2
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT SUM(CAST(meta ->> 'active_charging_power' AS float)/1000.00) as sum_active_charging_power_kW\nFROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')\nWHERE type = 'EVCharger';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT SUM(CAST(meta ->> 'active_charging_power' AS float)/1000.00) as sum_active_charging_power_kW\nFROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')\nWHERE type = 'EVCharger';\n")
 
 
 # #### Analysis of All Transformers with Downstream EV Chargers
@@ -93,7 +93,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT SUM(CAST(meta ->> 'active_char
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', 'result_ev_chargers <<', "\nSELECT ge.grid_element_id as ev_charger, \n    CAST(ge.meta ->> 'active_charging_power' AS float)/1000.00 as sum_active_charging_power_kW,\n    ggs.grid_element_id as transformer_id,\n    ggs.is_producer as top_feeder\nFROM grid_element ge\nJOIN grid_get_sources('{grid_id}', ge.grid_element_id, 'true') ggs\n    ON true \nWHERE ge.type = 'EVCharger'\n    AND ggs.type = 'Transformer' \nORDER BY ggs.grid_element_id, ge.grid_element_id;")
+get_ipython().run_cell_magic('sql', 'result_ev_chargers <<', "\nSELECT ge.grid_element_id as ev_charger, \n    CAST(ge.meta ->> 'active_charging_power' AS float)/1000.00 as sum_active_charging_power_kW,\n    ggs.grid_element_id as transformer_id,\n    ggs.is_producer as top_feeder\nFROM grid_element ge\nJOIN grid_get_sources('{grid_id}', ge.grid_element_id, 'true') ggs\n    ON true \nWHERE ge.type = 'EVCharger'\n    AND ggs.type = 'Transformer' \nORDER BY ggs.grid_element_id, ge.grid_element_id;\n")
 
 
 # In[7]:
@@ -115,7 +115,8 @@ df_evchargers
 
 
 # Aggregate the sum of the active charging power based on parent transformers and top feeders. 
-df_evchargers_sum = df_evchargers.groupby('transformer_id').sum().rename(columns={'top_feeder': 'number_ev_chargers'}).replace(0,1)
+df_evchargers_sum = df_evchargers.groupby('transformer_id').sum()\
+.rename(columns={'top_feeder': 'number_ev_chargers'}).replace(0,1)
 
 # Sort the results based on the parent/feeder transformer_id
 df_evchargers_sum.sort_index(key=natsort_keygen(), inplace=True)

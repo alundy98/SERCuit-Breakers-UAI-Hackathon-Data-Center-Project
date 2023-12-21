@@ -15,7 +15,7 @@
 # 
 # These kinds of analyses can help utilities better understand the nature of EV Charger load, which in turn can lead to better planning and management of EV charging infrastructure or EV Charger rate design.
 # 
-# For more details about EV Charger usage analysis and how it can be done using Awesense's platform, please refer to the [UC09-01 - EV Charging _ Use of Reserved Capacity Analysis.pdf](../usecase_descriptions/UC09-01%20-%20EV%20Charging%20_%20Use%20of%20Reserved%20Capacity%20Analysis.pdf) document.
+# For more details about EV Charger usage analysis and how it can be done using Awesense's platform, please refer to the [UC09-01 - EV Charging and Use of Reserved Capacity Analysis.pdf](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC09-01%20-%20EV%20Charging%20and%20Use%20of%20Reserved%20Capacity%20Analysis.pdf) document.
 
 # # Setup
 
@@ -66,7 +66,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT * FROM grid;\n')
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source geds, grid_element ge\nWHERE ge.grid_element_id = geds.grid_element_id\nAND ge.type = 'EVCharger';\n")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source geds, grid_element ge\nWHERE ge.grid_element_id = geds.grid_element_id\nAND ge.grid_id = 'awefice'\nAND ge.type = 'EVCharger';\n")
 
 
 # # Data Retrieval
@@ -542,7 +542,7 @@ def plot_evch_daily_load_vs_dow(df_all, evch_id, chart_type):
     fig.show()
 
 
-# In[35]:
+# In[37]:
 
 
 # Plotting day-of-week boxplots and line charts, first for all EV Chargers combined and then one EV Charger per plot.
@@ -556,7 +556,7 @@ plot_evch_daily_load_vs_dow(df_evch_enh, evch_id='all', chart_type='box')
 
 # ## Hour-of-Day Analysis
 
-# In[36]:
+# In[38]:
 
 
 def plot_evch_hourly_load_vs_hod(df_all, evch_id, chart_type):
@@ -608,7 +608,7 @@ def plot_evch_hourly_load_vs_hod(df_all, evch_id, chart_type):
     fig.show()
 
 
-# In[37]:
+# In[40]:
 
 
 # Plotting hour-of-day boxplots and line charts, first for all EV Chargers combined and then one EV Charger per plot.
@@ -622,7 +622,7 @@ plot_evch_hourly_load_vs_hod(df_evch_enh, evch_id='all', chart_type='box')
 
 # ## Month-of-Year Analysis
 
-# In[38]:
+# In[41]:
 
 
 def plot_evch_daily_load_vs_moy(df_all, evch_id):
@@ -660,16 +660,10 @@ def plot_evch_daily_load_vs_moy(df_all, evch_id):
     fig.show(config={'staticPlot': True})
 
 
-# In[39]:
+# In[42]:
 
 
 # plot_evch_daily_load_vs_moy(df_evch_enh, evch_id='all')
 for evch_id in df_evch['evch_id'].unique():
     plot_evch_daily_load_vs_moy(df_evch_enh, evch_id=evch_id)
-
-
-# In[ ]:
-
-
-
 

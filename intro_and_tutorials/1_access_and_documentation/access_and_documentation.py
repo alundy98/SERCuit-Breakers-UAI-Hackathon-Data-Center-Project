@@ -53,7 +53,7 @@ del edm_name, edm_password
 # In[3]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM get_class_documentation();')
+get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM get_class_documentation();\n')
 
 
 # Please note that the `ts_data_source_double` class is the type that the `ts_data_source_select()` function mentioned below returns. 
@@ -63,7 +63,7 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT *\nFROM get_class_documentatio
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', '', '\nSELECT function_name, function_args, description\nFROM get_function_documentation();')
+get_ipython().run_cell_magic('sql', '', '\nSELECT function_name, function_args, description\nFROM get_function_documentation();\n')
 
 
 # For both `get_class_documentation()` and `get_function_documentation()` functions, their input arguments can be used to do a wildcard matching. For example, the input argument of 'grid' returns the results that contain the word 'grid' in them.
@@ -71,17 +71,11 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT function_name, function_args, 
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT class_name, column_name, description\nFROM get_class_documentation('grid');")
+get_ipython().run_cell_magic('sql', '', "\nSELECT class_name, column_name, description\nFROM get_class_documentation('grid');\n")
 
 
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT function_name, function_args, description\nFROM get_function_documentation('grid');")
-
-
-# In[ ]:
-
-
-
+get_ipython().run_cell_magic('sql', '', "\nSELECT function_name, function_args, description\nFROM get_function_documentation('grid');\n")
 

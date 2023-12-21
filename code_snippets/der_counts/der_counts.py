@@ -160,7 +160,7 @@ def plot_count_bar(df, ids, is_entire_grid=False):
 # #### Input Parameters
 # Enter the grid ID and transformer ID of interest. 
 
-# In[5]:
+# In[4]:
 
 
 grid_id = input('Enter grid ID: ') # awefice
@@ -170,10 +170,10 @@ grid_element_id = input('Enter transformer ID: ') # transformer_2
 # #### SQL Queries
 # Fetch DERs downstream of a given transformer.
 
-# In[6]:
+# In[5]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT ggd.grid_element_id as der_id,                      ggd.type                 FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                 WHERE ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
+result = get_ipython().run_line_magic('sql', "SELECT ggd.grid_element_id as der_id,                       ggd.type                  FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false') ggd                  WHERE ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
 
 df = result.DataFrame()
 df
@@ -182,7 +182,7 @@ df
 # #### Visualization
 # Pie chart of DER counts.
 
-# In[7]:
+# In[6]:
 
 
 plot_count_pie(df, grid_element_id)
@@ -195,7 +195,7 @@ plot_count_pie(df, grid_element_id)
 # 
 # Enter the grid ID and multiple trasnformer IDs of interest. 
 
-# In[9]:
+# In[7]:
 
 
 grid_id = input('Enter grid ID: ') # awefice
@@ -205,14 +205,14 @@ grid_element_ids = input('Enter transformer IDs separated by space: ') # transfo
 # #### SQL Queries
 # Fetch DERs downstream of multiple transformers.
 
-# In[10]:
+# In[8]:
 
 
 # Prepare the input transformer IDs to be used in SQL query by adding quotes and commas.
 transformer_ids = "','".join(grid_element_ids.split())
 
 # SQL query.
-result = get_ipython().run_line_magic('sql', "SELECT ge.grid_element_id as transformer_id,                         ggd.grid_element_id as der_id,                         ggd.type                 FROM grid_element ge                 JOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd                 ON true                 WHERE ge.grid_element_id IN ('{transformer_ids}')                 AND ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
+result = get_ipython().run_line_magic('sql', "SELECT ge.grid_element_id as transformer_id,                          ggd.grid_element_id as der_id,                          ggd.type                  FROM grid_element ge                  JOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd                  ON true                  WHERE ge.grid_element_id IN ('{transformer_ids}')                  AND ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
 
 df = result.DataFrame()
 df
@@ -221,7 +221,7 @@ df
 # #### Visualization
 # Pie chart of DER counts. If a given DER is downstream of multiple transformers (e.g. because one transformer is downstream of another), the DER is counted only once.
 
-# In[11]:
+# In[9]:
 
 
 # Pie chart of DER counts.
@@ -230,7 +230,7 @@ plot_count_pie(df, grid_element_ids)
 
 # Bar chart of DER counts.
 
-# In[13]:
+# In[10]:
 
 
 plot_count_bar(df, grid_element_ids)
@@ -242,7 +242,7 @@ plot_count_bar(df, grid_element_ids)
 # #### Input Parameters
 # Enter the grid ID of interest. 
 
-# In[14]:
+# In[11]:
 
 
 grid_id = input('Enter grid ID: ') # awefice
@@ -251,10 +251,10 @@ grid_id = input('Enter grid ID: ') # awefice
 # #### SQL Queries
 # Fetch DERs in an entire grid.
 
-# In[15]:
+# In[12]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT ge.grid_element_id as transformer_id,                         ggd.grid_element_id as der_id,                         ggd.type                 FROM grid_element ge                 JOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd                 ON true                 WHERE ge.type = 'Transformer'                AND ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
+result = get_ipython().run_line_magic('sql', "SELECT ge.grid_element_id as transformer_id,                          ggd.grid_element_id as der_id,                          ggd.type                  FROM grid_element ge                  JOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd                  ON true                  WHERE ge.type = 'Transformer'                 AND ggd.type in ('EVCharger', 'Photovoltaic', 'Battery');")
 
 df = result.DataFrame()
 df
@@ -263,7 +263,7 @@ df
 # #### Visualization
 # Pie chart of DER counts. Each DER is counted only once.
 
-# In[16]:
+# In[13]:
 
 
 # Pie chart of DER counts.
@@ -272,7 +272,7 @@ plot_count_pie(df, grid_id, is_entire_grid=True)
 
 # Bar chart of DER counts.
 
-# In[17]:
+# In[14]:
 
 
 plot_count_bar(df, grid_id, is_entire_grid=True)

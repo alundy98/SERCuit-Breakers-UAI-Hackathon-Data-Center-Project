@@ -19,7 +19,7 @@
 # 
 # Results of such analysis can provide valuable insights for decision-makers on PV penetration, connection permits, and grid upgrades or planning activities.
 # 
-# For more details about PV generation analysis and how it can be analyzed using Awesense's platform, please refer to the [UC16-01 - Registered PV Generation Analysis](../usecase_descriptions/UC16-01%20-%20Registered%20PV%20Generation%20Analysis.pdf) document.
+# For more details about PV generation analysis and how it can be analyzed using Awesense's platform, please refer to the [UC16-01 - Registered PV Generation Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC16-01%20-%20Registered%20PV%20Generation%20Analysis.pdf) document.
 
 # ## Setup 
 
@@ -137,7 +137,7 @@ def plot_monthly_bar(df):
     df_pv_average = df_pv_month['TRUE_GENERATION'].sum()/df_pv_month['true_consumption'].sum()*100
     
     # Group by months and aggregate.
-    df_pv_month = df_pv_month.groupby(df_pv_month['timestamp'].dt.month).sum().reset_index()
+    df_pv_month = df_pv_month.groupby(df_pv_month['timestamp'].dt.month).sum(numeric_only=True).reset_index()
 
     # Calculate the percentage of production relative to true consumption. 
     df_pv_month['percent_production'] = df_pv_month['TRUE_GENERATION']/df_pv_month['true_consumption']*100
@@ -183,7 +183,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', 'result <<', "\nSELECT ge.grid_element_id as transformer_id,\n    ggd.grid_element_id as pv_id, \n    ggd.type, \n    ggd.meta ->> 'generation_capacity' as generation_capacity\nFROM grid_element ge \nJOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd \n    ON ggd.grid_id = ge.grid_id \nWHERE ggd.grid_id = '{grid_id}'\n    AND ge.type = 'Transformer' \n    AND ggd.type = 'Photovoltaic';")
+get_ipython().run_cell_magic('sql', 'result <<', "\nSELECT ge.grid_element_id as transformer_id,\n    ggd.grid_element_id as pv_id, \n    ggd.type, \n    ggd.meta ->> 'generation_capacity' as generation_capacity\nFROM grid_element ge \nJOIN grid_get_downstream('{grid_id}', ge.grid_element_id, 'false') ggd \n    ON ggd.grid_id = ge.grid_id \nWHERE ggd.grid_id = '{grid_id}'\n    AND ge.type = 'Transformer' \n    AND ggd.type = 'Photovoltaic';\n")
 
 
 # In[6]:
@@ -213,7 +213,7 @@ grid_element_id = input('Enter transformer ID: ') # transformer_36
 
 # Get meter net flow time series. 
 # If there's only downstream load, the "net flow" would refer to the downstream.
-result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                         ggd.grid_element_id as grid_element_id,                         tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                         tdss_c.value - COALESCE(tdss_p.value,0) as "kWh",                         \'NET_FLOW\' as type                FROM grid_element ge                 JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                    ON ggd.grid_id = ge.grid_id                 JOIN grid_element_data_source geds_c                     ON geds_c.grid_element_id = ggd.grid_element_id                     AND geds_c.type = \'CONSUMER\'                 JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                     ON true                 LEFT JOIN grid_element_data_source geds_p                     ON geds_p.grid_element_id = geds_c.grid_element_id                     AND geds_p.type = \'PRODUCER\'                 LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                     ON tdss_p.timestamp = tdss_c.timestamp                 WHERE ge.grid_element_id = \'{grid_element_id}\'                     AND ggd.type = \'Meter\';')
+result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                          ggd.grid_element_id as grid_element_id,                          tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                          tdss_c.value - COALESCE(tdss_p.value,0) as "kWh",                          \'NET_FLOW\' as type                 FROM grid_element ge                  JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                     ON ggd.grid_id = ge.grid_id                  JOIN grid_element_data_source geds_c                      ON geds_c.grid_element_id = ggd.grid_element_id                      AND geds_c.type = \'CONSUMER\'                  JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                      ON true                  LEFT JOIN grid_element_data_source geds_p                      ON geds_p.grid_element_id = geds_c.grid_element_id                      AND geds_p.type = \'PRODUCER\'                  LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                      ON tdss_p.timestamp = tdss_c.timestamp                  WHERE ge.grid_element_id = \'{grid_element_id}\'                      AND ggd.type = \'Meter\';')
 
 # Convert the results to dataframe.
 df_meter = result.DataFrame()
@@ -223,7 +223,7 @@ df_meter = result.DataFrame()
 
 
 # Get PV time series.
-result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                         ggd.grid_element_id as grid_element_id,                         tdss.timestamp at time zone \'America/Vancouver\' as timestamp,                         tdss.value as "kWh",                         geds.type                 FROM grid_element ge                 JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                     ON ggd.grid_id = ge.grid_id                 JOIN grid_element_data_source geds                     ON geds.grid_id = ggd.grid_id                     AND geds.grid_element_id = ggd.grid_element_id                 JOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss                     ON true                 WHERE ggd.grid_id = \'{grid_id}\'                     AND ge.grid_element_id = \'{grid_element_id}\'                     AND ggd.type = \'Photovoltaic\'                 ORDER by tdss.timestamp;')
+result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                          ggd.grid_element_id as grid_element_id,                          tdss.timestamp at time zone \'America/Vancouver\' as timestamp,                          tdss.value as "kWh",                          geds.type                  FROM grid_element ge                  JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                      ON ggd.grid_id = ge.grid_id                  JOIN grid_element_data_source geds                      ON geds.grid_id = ggd.grid_id                      AND geds.grid_element_id = ggd.grid_element_id                  JOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss                      ON true                  WHERE ggd.grid_id = \'{grid_id}\'                      AND ge.grid_element_id = \'{grid_element_id}\'                      AND ggd.type = \'Photovoltaic\'                  ORDER by tdss.timestamp;')
 
 # Convert the results to dataframe.
 df_pv = result.DataFrame()
@@ -263,13 +263,29 @@ plot_pv(df_pv_agg)
 
 # Description of the plots above. 
 winter_max = df_pv_agg.loc[df_pv_agg['timestamp'].dt.month<3, 'percent_production'].max()
-md("The plots above show the hourly PV generation in kWh (top plot),    what percentage of the hourly consumption load is supplied by PV generation (middle plot),    and the distribution of this percentage with respect to the hour of the day (bottom plot). <br><br>   In the example above (downstream of {}), the PV installation generates up to {} kWh during the summer.   This corresponds to a maximum of up to {}% of the hourly consumption load being supplied by PV generation.   In the winter, only up to {}% of the hourly consumption load is supplied by PV generation.   Hourly distribution of PV generation is higher during the daytime, reaching a peak around 1-2 pm,    and is zero during the night when there is no sunlight.    However, even for the mid-day hours, there are still days when the percentage is very close to 0,    likely due to rainy/snowy days or possibly due to system malfunctions. <br><br>   For other transformers, these values may be different.".format(grid_element_id, 
+md("The plots above show the hourly PV generation in kWh (top plot), \
+   what percentage of the hourly consumption load is supplied by PV generation (middle plot), \
+   and the distribution of this percentage with respect to the hour of the day (bottom plot). <br><br>\
+   In the example above (downstream of {}), the PV installation generates up to {} kWh during the summer.\
+   This corresponds to a maximum of up to {}% of the hourly consumption load being supplied by PV generation.\
+   In the winter, only up to {}% of the hourly consumption load is supplied by PV generation.\
+   Hourly distribution of PV generation is higher during the daytime, reaching a peak around 1-2 pm, \
+   and is zero during the night when there is no sunlight. \
+   However, even for the mid-day hours, there are still days when the percentage is very close to 0, \
+   likely due to rainy/snowy days or possibly due to system malfunctions. <br><br>\
+   For other transformers, these values may be different.".format(grid_element_id, 
                                                                   '%.2f' % df_pv_agg['TRUE_GENERATION'].max() 
                                                                   ,'%.2f' % df_pv_agg['percent_production'].max()
                                                                   ,'%.2f' % winter_max))
 
 
 # In[13]:
+
+
+df_pv_agg
+
+
+# In[14]:
 
 
 # Plot the percentage of monthly PV generations with respect to monthly loads and all-time PV generation percentage. 

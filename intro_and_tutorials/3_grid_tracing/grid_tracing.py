@@ -90,9 +90,6 @@ def plot_pie(df, interest_colname, title):
     # Create a dataframe of counts of each value.
     df_cts = df[interest_colname].value_counts().to_frame().reset_index()
     
-    # Re-align the index and count columns from the above dataframe result.
-    df_cts.rename(columns={'index':interest_colname, interest_colname: 'count'}, inplace=True)
-    
     # Create a pie plot.
     fig = px.pie(df_cts, names=interest_colname, values='count',
                 title=title)
@@ -142,7 +139,7 @@ grid_id = 'awefice'
 # In[5]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE grid_id = '{grid_id}';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE grid_id = '{grid_id}';\n")
 
 
 # The below are different element types available in the `awefice` grid.
@@ -150,7 +147,7 @@ get_ipython().run_cell_magic('sql', '', "\nSELECT last_updated\nFROM grid\nWHERE
 # In[6]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT DISTINCT type as element_type\nFROM grid_element\nWHERE grid_id = '{grid_id}'\nORDER BY element_type;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT DISTINCT type as element_type\nFROM grid_element\nWHERE grid_id = '{grid_id}'\nORDER BY element_type;\n")
 
 
 # Enter one of the element types from the above output to explore further in the `grid_element` view.
@@ -166,7 +163,7 @@ element_type = input('Enter the element type of interest: ')
 # In[8]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT grid_element_id\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = '{element_type}'\nORDER BY grid_element_id;")
+get_ipython().run_cell_magic('sql', '', "\nSELECT grid_element_id\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = '{element_type}'\nORDER BY grid_element_id;\n")
 
 
 # Choose one of the grid element ID from the above output to conduct tracing on.
@@ -195,25 +192,25 @@ trace_option = input('Enter the tracing option: ')
 if trace_option.lower() == 'source':
     
     # Set the third argument to `true` to retrieve the top feeder.
-    result = get_ipython().run_line_magic('sql', "SELECT *             FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true');   ")
+    result = get_ipython().run_line_magic('sql', "SELECT *              FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'true');")
     
 elif trace_option.lower() == 'all sources':
     
     # Set the third argument to `false` to retrieve all feeders.
-    result = get_ipython().run_line_magic('sql', "SELECT *             FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'false');")
+    result = get_ipython().run_line_magic('sql', "SELECT *              FROM grid_get_sources('{grid_id}', '{grid_element_id}', 'false');")
     
 elif trace_option.lower() == 'down':
     
     # Set the third argument to `false` to exclude itself from the output.
-    result = get_ipython().run_line_magic('sql', "SELECT *             FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false');")
+    result = get_ipython().run_line_magic('sql', "SELECT *              FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false');")
     
 elif trace_option.lower() == 'connected':
     
-    result = get_ipython().run_line_magic('sql', "SELECT *             FROM grid_get_connected('{grid_id}', '{grid_element_id}');")
+    result = get_ipython().run_line_magic('sql', "SELECT *              FROM grid_get_connected('{grid_id}', '{grid_element_id}');")
     
 elif trace_option.lower() == 'same voltage':
     
-    result = get_ipython().run_line_magic('sql', "SELECT *             FROM grid_get_same_voltage('{grid_id}', '{grid_element_id}');")
+    result = get_ipython().run_line_magic('sql', "SELECT *              FROM grid_get_same_voltage('{grid_id}', '{grid_element_id}');")
 
 else:
     print('Invalid input for tracing option. Please enter one of the following: Source, All Sources, Down, Connected.')
@@ -238,9 +235,17 @@ df.head()
 df[df['is_producer']==True]
 
 
-# For the demonstration of this notebook, we will continue using the full dataframe with unfiltered, data.
+# For the demonstration of this notebook, we will continue using the full dataframe with unfiltered data.
 
 # In[14]:
+
+
+# Create a dataframe of counts of each value.
+df_cts = df['type'].value_counts().to_frame().reset_index()
+df_cts
+
+
+# In[15]:
 
 
 # Create a pie plot for the breakdown of grid element types.
@@ -248,14 +253,14 @@ df_types = plot_pie(df, 'type',
                      'Breakdown of Grid Element Types for ' + trace_option.title() + ' Trace')
 
 
-# In[15]:
+# In[16]:
 
 
 # Return a table of grid element type counts.
 df_types
 
 
-# In[16]:
+# In[17]:
 
 
 # Create a pie plot for the breakdown of phases.
@@ -263,14 +268,14 @@ df_phases = plot_pie(df, 'phases',
                      'Breakdown of Phases for ' + trace_option.title() + ' Trace')
 
 
-# In[17]:
+# In[18]:
 
 
 # Return a table of phase counts.
 df_phases
 
 
-# In[18]:
+# In[19]:
 
 
 # Create a table of phase counts by grid element types.
@@ -286,16 +291,16 @@ phase_table(df)
 # 2. Entering the list of transformers from step 1 to `grid_get_same_voltage()` to get all grid elements with the same voltage as a given transformer.
 # 3. Matching the input grid element to the returned grid elements from step 2 and filter to the respective transformer as the final output.
 
-# In[19]:
+# In[20]:
 
 
 grid_element_id = input('Enter the grid element id of interest: ')
 
 
-# In[20]:
+# In[21]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT ggs.grid_element_id AS transformer\nFROM grid_get_sources('{grid_id}', '{grid_element_id}', true) ggs\nLEFT JOIN grid_get_same_voltage('{grid_id}', ggs.grid_element_id) ggsv\n    ON true\nWHERE ggs.type = 'Transformer'\n    AND ggsv.grid_element_id = '{grid_element_id}';")
+get_ipython().run_cell_magic('sql', '', "\nSELECT ggs.grid_element_id AS transformer\nFROM grid_get_sources('{grid_id}', '{grid_element_id}', true) ggs\nLEFT JOIN grid_get_same_voltage('{grid_id}', ggs.grid_element_id) ggsv\n    ON true\nWHERE ggs.type = 'Transformer'\n    AND ggsv.grid_element_id = '{grid_element_id}';\n")
 
 
 # ---

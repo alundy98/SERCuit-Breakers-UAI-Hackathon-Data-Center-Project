@@ -13,6 +13,7 @@
 import getpass
 import urllib.parse
 import pandas as pd
+import numpy as np
 
 
 # **Connection**
@@ -45,11 +46,13 @@ del edm_name, edm_password
 # **Input Parameters**
 # 
 # Enter the grid ID of interest.
+# 
+# The example below uses the North Central Zone grid, which is only available on Awesense tiers 2 & 3 environments.  
 
 # In[3]:
 
 
-grid_id = input('Enter grid ID: ') # awefice
+grid_id = input('Enter grid ID: ') # North Central Zone
 
 
 # **Retrieve all meter-DER pairs where the DER is downstream of (behind) the meter.**
@@ -57,7 +60,7 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[4]:
 
 
-get_ipython().run_cell_magic('sql', 'meter_ders << SELECT ge1.grid_element_id as meter_id,', "    ge1.meta ->> 'type_of_consumer' as meter_type,\n    ge2.type as der_type,\n    ge2.grid_element_id as der_id\nFROM grid_element ge1\nJOIN grid_get_downstream('awefice', ge1.grid_element_id, False) ge2 ON True\nWHERE ge1.grid_id = '{grid_id}' AND ge1.type = 'Meter'\n    AND (ge2.type='EVCharger' OR ge2.type='Photovoltaic' OR ge2.type='Battery')\nORDER BY meter_type, meter_id;")
+get_ipython().run_cell_magic('sql', 'meter_ders << SELECT ggs.grid_element_id as meter_id,', "    ggs.meta ->> 'type_of_consumer' as meter_type,\n    ge.type as der_type,\n    ge.grid_element_id as der_id\nFROM grid_element ge\nJOIN grid_get_sources('{grid_id}', ge.grid_element_id, True) ggs ON True\nWHERE ge.grid_id = '{grid_id}' AND ggs.type = 'Meter'\n    AND (ge.type='EVCharger' OR ge.type='Photovoltaic' OR ge.type='Battery')\nORDER BY meter_type, meter_id;\n")
 
 
 # In[5]:
@@ -82,7 +85,9 @@ df_matrix
 
 
 # Label the DER combinations
-df_matrix['DERs Present'] = df_matrix['Battery'].isnull().map({True: '_', False: 'B'})     + df_matrix['EVCharger'].isnull().map({True: '_', False: 'E'})     + df_matrix['Photovoltaic'].isnull().map({True: '_', False: 'P'})
+df_matrix['DERs Present'] = (df_matrix['Battery'].isnull().map({True: '_', False: 'B'}) if np.any(df_matrix.columns == 'Battery') else '_')\
+    + (df_matrix['EVCharger'].isnull().map({True: '_', False: 'E'}) if np.any(df_matrix.columns == 'EVCharger') else '_') \
+    + (df_matrix['Photovoltaic'].isnull().map({True: '_', False: 'P'}) if np.any(df_matrix.columns == 'Photovoltaic') else '_')
 df_matrix
 
 
