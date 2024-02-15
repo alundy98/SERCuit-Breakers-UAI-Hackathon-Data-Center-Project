@@ -129,10 +129,10 @@ df_flow = net_flow.DataFrame()
 
 
 # Aggregate the consumer load.
-df_consumer = df_flow.loc[df_flow['type']=='CONSUMER'].groupby('tariff_id').sum().rename(columns={'kWh': 'consumer_kWh'})
+df_consumer = df_flow.loc[df_flow['type']=='CONSUMER'].groupby('tariff_id').sum(numeric_only=True).rename(columns={'kWh': 'consumer_kWh'})
 
 # Aggregate the producer load.
-df_producer = df_flow.loc[df_flow['type']=='PRODUCER'].groupby('tariff_id').sum().rename(columns={'kWh': 'producer_kWh'})
+df_producer = df_flow.loc[df_flow['type']=='PRODUCER'].groupby('tariff_id').sum(numeric_only=True).rename(columns={'kWh': 'producer_kWh'})
 
 # Concat the aggregated consumer and producer loads. 
 df_net=pd.concat([df_consumer, df_producer], axis=1).fillna(0).reset_index()

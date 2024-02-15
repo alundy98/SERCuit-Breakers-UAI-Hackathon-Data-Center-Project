@@ -4,7 +4,7 @@
 # ## Overview
 
 # This notebook is intended to:
-# * Introduce core views and functions available in Awesense's Energy Data Model (EDM).
+# * Introduce the core views and functions available in Awesense's Energy Data Model (EDM) SQL API.
 # * Demonstrate various ways to fetch and work with data using SQL and Python.
 # 
 # For complete documentation on the available views and functions, please refer to the [access_and_documentation.ipynb](../1_access_and_documentation/access_and_documentation.ipynb) notebook.

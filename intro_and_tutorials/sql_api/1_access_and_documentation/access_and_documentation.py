@@ -4,7 +4,7 @@
 # ## Overview
 
 # This notebook is intended to:
-# * Show how to connect to Awesense's Energy Data Model (EDM).
+# * Show how to connect to Awesense's Energy Data Model (EDM) using SQL API.
 # * Access various documentations on the available functions and views. 
 # 
 # Please refer to the [main_concepts.ipynb](../2_main_concepts/main_concepts.ipynb) notebook for more details about the core views such as `grid`, `grid_element`, and `grid_element_data_source`.

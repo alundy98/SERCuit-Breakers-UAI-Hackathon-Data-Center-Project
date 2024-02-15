@@ -11,7 +11,7 @@
 # 
 # Insights originating from this type of analysis are essential for regulatory reporting, and allow utilities to understand consumer behaviour and improve rate design to increase the satisfaction and retention of consumers. 
 # 
-# For a comprehensive list of topological, hierarchical, geographical and customer segments that can be used for the CP & NCP analysis using the Awesense Platform, please refer to the [UC01-01 - Coincident Peak and Non-Coincident Peak Analysis.pdf](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC01-01%20-%20Coincident%20Peak%20and%20Non-Coincident%20Peak%20Analysis.pdf) document.
+# For a comprehensive list of topological, hierarchical, geographical and customer segments that can be used for the CP & NCP analysis using the Awesense Platform, please refer to the [UC01-01 - Coincident Peak and Non-Coincident Peak Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC01-01%20-%20Coincident%20Peak%20and%20Non-Coincident%20Peak%20Analysis.pdf) document.
 
 # ---
 

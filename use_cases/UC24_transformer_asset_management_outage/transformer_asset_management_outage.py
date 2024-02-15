@@ -7,7 +7,7 @@
 # * Mirror existing TGI functionalities in a notebook format.
 # * Demonstrate a use case: Transformer Asset Management.
 # 
-# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades.pdf](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
+# For more details about transformer asset management, particularly as it relates to outages, and how it can be analyzed using Awesense's platform, please refer to the [UC24-01 - Analysis of Planned Outage for Assets Upgrades](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC24-01%20-%20Analysis%20of%20Planned%20Outage%20for%20Assets%20Upgrades.pdf) document.
 
 # ## Set up
 
@@ -120,7 +120,7 @@ fig.update_traces(textposition='inside', textinfo='percent+label+value')
 
 
 # Calculate age as the number of years passed since commission date to today.
-df['age'] = (pd.to_datetime('now') - pd.to_datetime(df['commission_date'])) / np.timedelta64(1,'D') / 365
+df['age'] = (pd.Timestamp.now() - pd.to_datetime(df['commission_date'])) / np.timedelta64(1,'D') / 365
 
 # Create a histogram of transformer age.
 fig = px.histogram(df['age'], x='age',

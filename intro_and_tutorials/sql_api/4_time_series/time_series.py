@@ -4,7 +4,7 @@
 # ## Overview
 
 # This notebook is intended to:
-# - Demonstrate how to access time series data for meters and SCADAs from Awesense's Energy Data Model (EDM).
+# - Demonstrate how to access time series data for meters and SCADAs using Awesense's Energy Data Model (EDM) SQL API.
 # 
 # Please refer to the [main_concepts.ipynb](../2_main_concepts/main_concepts.ipynb) notebook for a high-level introduction to and simpler examples of the core views and functions available in Awesense's Energy Data Model (EDM).
 

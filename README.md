@@ -48,7 +48,7 @@ Below is a summary of data types that are currently available in Awesense's Sand
 Additional information on data types of Awesense's Energy Data Model and the EDM SQL interface used by the notebooks in this repo can be consulted in the documentation available on all servers once logging in via Awesense's True Grid Intelligence (TGI) web app UI. 
 
 ### Present Data 
-Below are the data currently in place. Tier 1 contains one grid, called `awefice`, which is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology. Tiers 2 & 3 contain an additional, larger grid called `North Central Zone`. This grid is located in Ohio and has fourty six-feeders, over fifteen thousand transformers, and over twenty thousand meters.  
+Below are the data currently in place. Tier 1 contains one grid, called `awefice`, which is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology. Tiers 2 & 3 contain an additional, larger grid called `North Central Zone`. This grid is located in Ohio and has forty six feeders, over fifteen thousand transformers, and over twenty thousand meters.  
 
 
 For a detailed description of the grids' contents and access, please contact api@awesense.com.
@@ -146,13 +146,15 @@ For a detailed description of the grids' contents and access, please contact api
 **Time Series**
 | Grid Element | Metrics | Frequency | Phase Granularity | History |
 |---|---|---|---|---|
-| SCADA | kWh | hourly | 3-phase aggregate | Jan 2021 - now |
-| Meter | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
-| Meter | V | hourly | 3-phase aggregate* | Jan 2021 - now |
-| Solar | kWh | hourly | 3-phase aggregate* | Jan 2021 - now |
+| SCADA | kWh | hourly | per-phase* | Jan 2021 - now |
+| Meter | kWh | hourly | 3-phase aggregate** | Jan 2021 - now |
+| Meter | V | hourly | 3-phase aggregate** | Jan 2021 - now |
+| Solar | kWh | hourly | 3-phase aggregate** | Jan 2021 - now |
 | EV Charger | kWh | minutely | per-phase| Jan 2021 - now |
 
-*3-phase aggregate for three-phase grid elements, single phase for single-phase grid elements.
+\* Per-phase time series for SCADA elements are available only for the `North Central Zone` grid. The `awefice` grid has 3-phase aggregate SCADA data. 
+
+\*\* 3-phase aggregate for three-phase grid elements, single phase for single-phase grid elements.
 
 
 ### Upcoming Data

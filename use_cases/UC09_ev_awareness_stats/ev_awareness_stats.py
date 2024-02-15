@@ -15,7 +15,7 @@
 # 
 # These kinds of analyses can help utilities better understand the nature of EV Charger load, which in turn can lead to better planning and management of EV charging infrastructure or EV Charger rate design.
 # 
-# For more details about EV Charger usage analysis and how it can be done using Awesense's platform, please refer to the [UC09-01 - EV Charging and Use of Reserved Capacity Analysis.pdf](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC09-01%20-%20EV%20Charging%20and%20Use%20of%20Reserved%20Capacity%20Analysis.pdf) document.
+# For more details about EV Charger usage analysis and how it can be done using Awesense's platform, please refer to the [UC09-01 - EV Charging and Use of Reserved Capacity Analysis](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC09-01%20-%20EV%20Charging%20and%20Use%20of%20Reserved%20Capacity%20Analysis.pdf) document.
 
 # # Setup
 
@@ -542,7 +542,7 @@ def plot_evch_daily_load_vs_dow(df_all, evch_id, chart_type):
     fig.show()
 
 
-# In[37]:
+# In[35]:
 
 
 # Plotting day-of-week boxplots and line charts, first for all EV Chargers combined and then one EV Charger per plot.
@@ -556,7 +556,7 @@ plot_evch_daily_load_vs_dow(df_evch_enh, evch_id='all', chart_type='box')
 
 # ## Hour-of-Day Analysis
 
-# In[38]:
+# In[36]:
 
 
 def plot_evch_hourly_load_vs_hod(df_all, evch_id, chart_type):
@@ -608,7 +608,7 @@ def plot_evch_hourly_load_vs_hod(df_all, evch_id, chart_type):
     fig.show()
 
 
-# In[40]:
+# In[37]:
 
 
 # Plotting hour-of-day boxplots and line charts, first for all EV Chargers combined and then one EV Charger per plot.
@@ -622,7 +622,7 @@ plot_evch_hourly_load_vs_hod(df_evch_enh, evch_id='all', chart_type='box')
 
 # ## Month-of-Year Analysis
 
-# In[41]:
+# In[38]:
 
 
 def plot_evch_daily_load_vs_moy(df_all, evch_id):
@@ -660,7 +660,7 @@ def plot_evch_daily_load_vs_moy(df_all, evch_id):
     fig.show(config={'staticPlot': True})
 
 
-# In[42]:
+# In[39]:
 
 
 # plot_evch_daily_load_vs_moy(df_evch_enh, evch_id='all')

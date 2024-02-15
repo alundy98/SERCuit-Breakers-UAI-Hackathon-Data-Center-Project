@@ -87,8 +87,8 @@ def plot_pie(df, interest_colname, title):
     return the counts dataframe.
     """
     
-    # Create a dataframe of counts of each value.
-    df_cts = df[interest_colname].value_counts().to_frame().reset_index()
+    # Create a dataframe of counts of each value. 
+    df_cts = df[interest_colname].value_counts().to_frame(name = 'count').rename_axis(interest_colname).reset_index()
     
     # Create a pie plot.
     fig = px.pie(df_cts, names=interest_colname, values='count',
@@ -240,27 +240,19 @@ df[df['is_producer']==True]
 # In[14]:
 
 
-# Create a dataframe of counts of each value.
-df_cts = df['type'].value_counts().to_frame().reset_index()
-df_cts
-
-
-# In[15]:
-
-
 # Create a pie plot for the breakdown of grid element types.
 df_types = plot_pie(df, 'type', 
                      'Breakdown of Grid Element Types for ' + trace_option.title() + ' Trace')
 
 
-# In[16]:
+# In[15]:
 
 
 # Return a table of grid element type counts.
 df_types
 
 
-# In[17]:
+# In[16]:
 
 
 # Create a pie plot for the breakdown of phases.
@@ -268,14 +260,14 @@ df_phases = plot_pie(df, 'phases',
                      'Breakdown of Phases for ' + trace_option.title() + ' Trace')
 
 
-# In[18]:
+# In[17]:
 
 
 # Return a table of phase counts.
 df_phases
 
 
-# In[19]:
+# In[18]:
 
 
 # Create a table of phase counts by grid element types.
@@ -291,13 +283,13 @@ phase_table(df)
 # 2. Entering the list of transformers from step 1 to `grid_get_same_voltage()` to get all grid elements with the same voltage as a given transformer.
 # 3. Matching the input grid element to the returned grid elements from step 2 and filter to the respective transformer as the final output.
 
-# In[20]:
+# In[19]:
 
 
 grid_element_id = input('Enter the grid element id of interest: ')
 
 
-# In[21]:
+# In[20]:
 
 
 get_ipython().run_cell_magic('sql', '', "\nSELECT ggs.grid_element_id AS transformer\nFROM grid_get_sources('{grid_id}', '{grid_element_id}', true) ggs\nLEFT JOIN grid_get_same_voltage('{grid_id}', ggs.grid_element_id) ggsv\n    ON true\nWHERE ggs.type = 'Transformer'\n    AND ggsv.grid_element_id = '{grid_element_id}';\n")

@@ -181,7 +181,7 @@ feeder_flow = feeder_flow.DataFrame()
 feeder_flow['kWh'] = np.where(feeder_flow['type'].isin(['PRODUCER']), -feeder_flow['kWh'], feeder_flow['kWh'])
 
 # Group the results by timestamp and consumer types and sum the net flow. 
-feeder_flow  = feeder_flow.groupby(['timestamp', 'consumer_type']).sum().reset_index()
+feeder_flow  = feeder_flow.groupby(['timestamp', 'consumer_type']).sum(numeric_only=True).reset_index()
 
 
 # In[15]:
