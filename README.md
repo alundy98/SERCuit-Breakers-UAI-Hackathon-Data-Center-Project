@@ -8,12 +8,13 @@ edm-app-examples is organized as follows:
 collection of introduction and tutorial materials to get started and learn how to use EDM.
 * [code_snippets](code_snippets) - code snippets demonstrating quick analytical insights.
 * [use_cases](use_cases) - real implementations of use cases from various areas of the energy domain.
+* [utils](utils) - general utility functions that are utillized from notebooks in other folders. 
 
 Each folder contains an individual README.md file with more details specific to that folder. 
 
 
 ## Getting Started
-The fastest way to get started with this repo is to make use of the Awesense Sandbox Environment. `Sandbox` is a collection of Awesense servers (for tiers 1, 2&3) where customers, partners and others can use the functionality of the Awesense platform, including APIs and the True Grid Intelligence (TGI) web app, to explore and create applications and solutions for the grid ecosystem using realistic simulated data. 
+The fastest way to get started with this repo is to make use of the Awesense Sandbox Environment. `Sandbox` is a collection of Awesense servers (for tiers 1, 2&3) where customers, partners and others can use the functionality of the Awesense platform, including APIs (SQL AND REST) and the True Grid Intelligence (TGI) web app, to explore and create applications and solutions for the grid ecosystem using realistic simulated data. Currently, most of the snippets and use cases are implemented using the Awesense SQL API, with only a handful using the REST API, but more to be added.
 
 While highly portable, all the code in this repository can be run out of the box against one of the `Sandbox` servers, and, unless otherwise specified, the notebooks in this repo were run and their outputs saved using input parameters (for example, grid ID, transformer IDs) corresponding to the `Sandbox` tier 1 server dataset. With new releases, more notebooks will run out of the box against the richer datasets present only in the tier 2 & 3 servers (for example, the code snippet meter_ders_matrix). Using other servers might require entering different parameters and produce results different from those presented in these notebooks.
 
@@ -36,16 +37,16 @@ pip3 install -r python_requirements.txt
 python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the new venv as expected
 ```
 
-If restarting your command line terminal, only the `source` command needs to be re-run.
+If restarting your command line terminal, only the `source` command needs to be re-run. If the `python_requirements.txt` file was updated, then the `pip3 install` and `python3 -m` commands must also be run again.
 
-Please refer to the [use_case's README](/use_cases/README.md) for instructions on installing the additional libraries specific to a given use case.
+Please refer to the [use_cases' README](/use_cases/README.md) for instructions on installing the additional libraries specific to a given use case.
 
 
 ## Sandbox Dataset
 
 Below is a summary of data types that are currently available in Awesense's Sandbox servers, as well as data types that are upcoming.
 
-Additional information on data types of Awesense's Energy Data Model and the EDM SQL interface used by the notebooks in this repo can be consulted in the documentation available on all servers once logging in via Awesense's True Grid Intelligence (TGI) web app UI. 
+For more information on the data types used in Awesense's Energy Data Model and the EDM (SQL and REST) interfaces utilized by the notebooks in this repository, you can refer to the documentation available on all servers. To access the documentation, simply log in to Awesense's True Grid Intelligence (TGI) web app UI and click on the question mark symbol located on the top right corner.
 
 ### Present Data 
 Below are the data currently in place. Tier 1 contains one grid, called `awefice`, which is composed of two primaries (also known as feeders or circuits). The southern primary represents North American grid topology, and the northern primary represents European grid topology. Tiers 2 & 3 contain an additional, larger grid called `North Central Zone`. This grid is located in Ohio and has forty six feeders, over fifteen thousand transformers, and over twenty thousand meters.  
