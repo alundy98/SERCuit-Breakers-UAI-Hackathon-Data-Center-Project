@@ -63,7 +63,7 @@ del edm_name, edm_password
 
 
 def load_plot(df_tr, pv = 0, pv_generation_plot = False):
-    """"
+    """
     Plot load time series and PV generation capacity if applicable.    
     """
     
@@ -107,7 +107,7 @@ def load_plot(df_tr, pv = 0, pv_generation_plot = False):
 
 def capacity_plot_add(df, pv, filter_name, start_hour, end_hour, 
                       start_month, end_month, pvs_dict = {}):
-    """"
+    """
     Plot the load time series, the generation capacity, and the number of PV systems based on a filter.
     
     Return the dictionary with the filter name and maximum number of PVs.

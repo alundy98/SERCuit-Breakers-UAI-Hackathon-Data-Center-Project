@@ -4,11 +4,11 @@
 # ## Overview
 
 # This notebook is intended to:
-# * Quantify the number of EV chargers that could be installed/operated in a section of the grid (i.e. downstream from a transformer) without overloading the transformer.
+# * Quantify the number of EV chargers that could be installed/operated in a section of the grid (i.e. downstream from an HV/MV transformer) without overloading the transformer.
 # 
 # This use case is designed as follows:
 #   * Choose the grid of interest. 
-#   * Define the area of interest within the grid by choosing a transformer.
+#   * Define the area of interest within the grid by choosing an HV/MV transformer.
 #   * Aggregate all loads downstream from the specific transformer.
 #   * Calculate the hourly available capacity in this grid section by subtracting the hourly aggregated load from the transformer's rating.
 #   * Quantify the additional EV chargers that could be installed/operated in this grid section based on the hourly available capacity.
@@ -64,7 +64,7 @@ del edm_name, edm_password
 
 
 def plot_available_capacity(df):
-    """"
+    """
     Plot a time series with hourly available capacity and box plots showing its distribution over the 
     months of the year and the hours of the day.  
     """
@@ -135,7 +135,7 @@ def calc_number_of_evs(df, ev_power):
 # ## Use Case - Transformer Capacity Analysis for EV Chargers
 
 # #### Input Parameters
-# Input the grid name to find all the transformers in this grid. 
+# Input the grid name to find all the HV/MV transformers in this grid. 
 
 # In[4]:
 
@@ -151,75 +151,77 @@ grid_id = input('Enter grid ID: ') # awefice
 # In[5]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                          meta,                          phases                 FROM grid_element                 WHERE grid_id = '{grid_id}'                     AND type = 'Transformer';")
+get_ipython().run_cell_magic('sql', 'transformers <<', "\nSELECT grid_element_id,\n    meta ->> 'ownership' as ownership,\n    meta ->> 'rating_kva' as rating_kva,\n    meta ->> 'voltage_level' as voltage_level,\n    meta ->> 'commission_date' as commission_date,\n    meta ->> 'primary_voltage' as primary_voltage,\n    meta ->> 'secondary_voltage' as secondary_voltage,\n    phases\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Transformer'\n    AND meta ->> 'voltage_level' = 'HV/MV';\n")
 
-# Convert the results to a data frame.
-df_transformers = result.DataFrame()
-
-# Pull out the information from `meta` column saved as JSONB.
-df_transformers = pd.concat([df_transformers.drop(['meta'], axis=1),
-                             df_transformers['meta'].apply(pd.Series)], axis=1)
-
-# Choose the relevant columns to display transformers. 
-df_transformers = df_transformers[['grid_element_id', 'ownership', 'rating_kva', 
-                                   'phases', 'voltage_level', 'commission_date', 
-                                   'primary_voltage', 'secondary_voltage']]
-
-# Display the results.
-df_transformers
-
-
-# Choose a transformer from the above list. Please note that the write-up for this use case is based on `transformer_92`.
 
 # In[6]:
 
 
-# User input for the transformer.
-grid_element_id = input('Enter transformer ID: ') # transformer_92
+# Convert the results to a data frame.
+df_transformers = transformers.DataFrame()
+
+if not df_transformers.empty:
+    df_transformers['rating_kva'] = df_transformers['rating_kva'].astype(float)
+    # Display the results.
+    display(df_transformers)
+else:
+    raise ValueError(
+    f" The grid_id '{grid_id}' does not have any transformers. Please enter a correct grid_id."
+    )
 
 
-# #### Meter Information
-# Fetch and display the hourly aggregate load downstream of the transformer. Hourly load is available from `2021-01-01 00:00:00 PST` until the present.
+# Choose a transformer from the above list.
 
 # In[7]:
 
 
-result = get_ipython().run_line_magic('sql', "SELECT grid_element_id,                          type,                          meta                  FROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')                  WHERE type = 'Meter';")
-
-# Convert the results to a data frame.
-df_meters = result.DataFrame()
-
-# Pull out the information from the `meta` column saved as JSONB.
-df_meters = pd.concat([df_meters.drop(['meta'], axis=1),
-                       df_meters['meta'].apply(pd.Series)], axis=1)
-
-# Choose the relevant columns to display. 
-df_meters = df_meters[['grid_element_id', 'type', 'type_of_consumer', 'parent_transformer_id', 'voltage_level']]
-
-# display the results.
-df_meters
+# User input for the transformer.
+grid_element_id = input('Enter transformer ID: ') # transformer_6
 
 
-# #### Load
-# Fetch and display the hourly aggregate load downstream of the transformer. Please note that if there is any upstream load, it is treated as available for EV chargers.
+# #### Meter Information
+# Fetch and display the meters downstream of the transformer.
 
 # In[8]:
 
 
-result = get_ipython().run_line_magic('sql', 'SELECT ge.grid_element_id as transformer_id,                          tdss_c.timestamp at time zone \'America/Vancouver\' as timestamp,                          SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as "total_kW", ge.meta                  FROM grid_element ge                  JOIN grid_get_downstream(\'{grid_id}\', ge.grid_element_id, \'false\') ggd                     ON ggd.grid_id = ge.grid_id                  JOIN grid_element_data_source geds_c                      ON geds_c.grid_element_id = ggd.grid_element_id                      AND geds_c.type = \'CONSUMER\'                  JOIN ts_data_source_select(geds_c.grid_element_data_source_id, \'kWh\') tdss_c                      ON true                  LEFT JOIN grid_element_data_source geds_p                      ON geds_p.grid_element_id = geds_c.grid_element_id                      AND geds_p.type = \'PRODUCER\'                  LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, \'kWh\') tdss_p                      ON tdss_p.timestamp = tdss_c.timestamp                  WHERE ge.grid_element_id = \'{grid_element_id}\'                      AND ggd.type = \'Meter\'                  GROUP BY ge.grid_element_id, tdss_c.timestamp, ge.meta                  ORDER by 2;')
+get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT grid_element_id,\n    type\nFROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')\nWHERE type = 'Meter';\n")
+
+
+# In[9]:
+
+
+# Convert the results to a data frame.
+df_meters = meters.DataFrame()
+
+if not df_meters.empty:
+    # display the results.
+    display(df_meters)
+else:
+    raise ValueError(
+        f" The transformer_id '{grid_element_id}' does not have any meters downstream. Please choose a different transformer."
+    )
+
+
+# #### Load
+# Fetch and display the hourly aggregate load downstream of the transformer. Hourly load is available from `2021-01-01 00:00:00 PST` until the present.
+
+# In[10]:
+
+
+result = get_ipython().run_line_magic('sql', 'WITH last_year AS (                  SELECT TSTZRANGE(NOW() - INTERVAL \'1 year\', NOW()) AS time_range                ),                transformers as (                  SELECT grid_id, grid_element_id AS transformer_id                    FROM grid_element                   WHERE type = \'Transformer\'                    AND grid_id = \'{grid_id}\'                    AND meta->>\'voltage_level\' = \'HV/MV\'                    AND grid_element_id = \'{grid_element_id}\'                ),                transformer_meter AS (                  SELECT t.grid_id, t.transformer_id, ggd.grid_element_id AS meter_id                    FROM transformers t                    JOIN grid_get_downstream(t.grid_id, t.transformer_id, false) ggd                      ON true                   WHERE ggd.type = \'Meter\'                ),                meter_consumer_sources AS (                  SELECT geds_c.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_c                    JOIN transformer_meter tm                      ON geds_c.grid_id = geds_c.grid_id                     AND geds_c.grid_element_id = tm.meter_id                   WHERE geds_c.type = \'CONSUMER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_producer_sources AS (                  SELECT geds_p.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_p                    JOIN transformer_meter tm                      ON geds_p.grid_id = geds_p.grid_id                     AND geds_p.grid_element_id = tm.meter_id                   WHERE geds_p.type = \'PRODUCER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_consumption AS (                  SELECT mcs.transformer_id, mcs.meter_id, tdss_c.value, tdss_c.timestamp                    FROM meter_consumer_sources mcs                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcs.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_c                      ON true                ),                meter_production AS (                  SELECT mcp.transformer_id, mcp.meter_id, tdss_p.value, tdss_p.timestamp                    FROM meter_producer_sources mcp                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcp.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_p                      ON true                )                SELECT mc.transformer_id, mc.timestamp at time zone \'America/Vancouver\' as timestamp,                       SUM (mc.value - COALESCE(mp.value, 0)) as "total_kW"                  FROM meter_consumption mc                  LEFT JOIN meter_production mp                    ON mc.transformer_id = mp.transformer_id                   AND mc.meter_id = mp.meter_id                   AND mc.timestamp = mp.timestamp                 GROUP BY mc.transformer_id, mc.timestamp                ;')
+              
 
 # Convert the results to a data frame.
 df_transformer_load = result.DataFrame()
 
-# Pull out the information from the `meta` column saved as JSONB.
-df_transformer_load = pd.concat([df_transformer_load.drop(['meta'], axis=1),
-                                df_transformer_load['meta'].apply(pd.Series)], axis=1)
+# Merge the results with df_transformers to get `rating_kva`
+df_transformer_load = pd.merge(df_transformer_load, df_transformers[['grid_element_id', 'rating_kva']], 
+                               left_on='transformer_id', right_on='grid_element_id', how='left')
 
-# Choose the relevant columns to display. 
-df_transformer_load = df_transformer_load[['transformer_id', 'timestamp', 'total_kW', 'rating_kva']]
 
 # Calculate the hourly available capacity. 
-df_transformer_load['available_capacity'] = df_transformer_load['rating_kva']*0.98- df_transformer_load['total_kW']
+df_transformer_load['available_capacity'] = df_transformer_load['rating_kva']*0.98 - df_transformer_load['total_kW']
 
 # Display the results.
 df_transformer_load
@@ -229,7 +231,7 @@ df_transformer_load
 # #### Available Hourly Capacity
 # Plot the available hourly capacity downstream from the transformer and its distribution with respect to months of the year and hours of the day. 
 
-# In[9]:
+# In[11]:
 
 
 # Display the hourly available capacity and monthly variations. 
@@ -242,31 +244,31 @@ plot_available_capacity(df_transformer_load)
 # 
 # The maximum number of EV chargers that could be installed without overloading the transformer is calculated by dividing the hourly available capacity by the maximum EV charging power. This calculation assumes the worst-case scenario where all the EV chargers run simultaneously at maximum load.
 
-# In[10]:
+# In[12]:
 
 
 # User input for EV Power. 
 ev_max_power = input('Enter EV Charger Maximum Power (kW): ') # 15
 
 
-# In[11]:
+# In[13]:
 
 
 df_transformer_load = calc_number_of_evs(df_transformer_load, ev_max_power)
 
 
-# In[12]:
+# In[14]:
 
 
 # Description of the plots above. 
 md("The plot shows the number of EV chargers that could be installed and operated in this section of the grid.\
-For the example with `transformer_92`, this number tends to be higher during the summer when the load is \
+For the example with `transformer_6`, this number tends to be higher during the summer when the load is \
 reduced and the hourly available capacity increases; and the reverse pattern holds for winter. However, \
 if there are PV installations present in this section of the grid, the fluctuation in the number of \
 EV chargers that could be installed and operated without overloading the transformers becomes more \
 pronounced for each day.<br><br>\
 Based on this analysis, the number of EV chargers that can be installed and operated year round \
-(in the case of `transformer_92` and EV charger with a maximum power of {} kW) is {}.".format(ev_max_power, 
+(in the case of `{}` and EV charger with a maximum power of {} kW) is {}.".format(grid_element_id, ev_max_power, 
                                                                                               '%.0f' % df_transformer_load['EVs'].min() ))
 
 

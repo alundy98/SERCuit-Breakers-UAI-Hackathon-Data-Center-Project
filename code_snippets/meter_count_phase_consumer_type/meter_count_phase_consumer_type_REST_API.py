@@ -19,9 +19,9 @@
 # 
 # The insights derived from these results may be helpful in multiple use cases ranging from Data Quality Improvement to Grid Planning or Customer Analytics. 
 # 
-# It is assumed that the user has been given access to the Awesense api-connect developer portal along with the necessary credentials for accessing Sandbox tier 2&3. Otherwise, please contact us at [api@awesense.com](api@awesense.com). 
+# It is assumed that the user has been given credentials for accessing the Awesense Sandbox. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
 # 
-# You can find more information about how to use Awesense's api-connect developer portal in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
+# You can find more information about how to use Awesense's REST API in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
 
 # ---
 
@@ -31,15 +31,15 @@
 
 
 import getpass
-import plotly.express as px
+
 import pandas as pd
-import base64
-import callrestapi as cr
+import plotly.express as px
+import requests
 
 pd.set_option('display.max_columns', None)
 
 
-# **Connection**
+# ### Connection
 # 
 # Enter the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
@@ -47,36 +47,38 @@ pd.set_option('display.max_columns', None)
 # In[2]:
 
 
-# Enter your username and password to log into the server.
-server_user_name = getpass.getpass(prompt='Username: ')
+# Enter the REST server origin or hostname (optionally without "https://")
+server_hostname = getpass.getpass(prompt='REST server address: ')
+# Ensure that the server address does not specify plaintext HTTP
+assert (server_hostname.startswith('http://') == False), 'Server address uses https:// for secure communications, not http://'
+
+# Support the case where the specified address already included `https://`, otherwise add it
+if server_hostname.startswith('https://'):
+    server_origin = server_hostname
+else:
+    server_origin = f'https://{server_hostname}'
 
 
 # In[3]:
 
 
-server_password = getpass.getpass(prompt='Password: ')
+# Enter the username that you use to log into the server
+server_user_name = getpass.getpass(prompt='Username: ')
 
 
 # In[4]:
 
 
-# Enter the subscription key (primary or secondary) from the `Profile` page on the api-connect developer portal website. 
-# If you don't have a subscription key, you will need to create one. 
-# To do so, go to the `Products` page on the api-connect developer portal website, click on the desired product name, enter a product description, and click `Subscribe`. 
-subscription_key = getpass.getpass(prompt='Subscription Key: ')
+# Enter the password that you use to log into the server
+server_password = getpass.getpass(prompt='Password: ')
 
 
 # In[5]:
 
 
-# Create a BasicAuth credential based on user_name and password.  
-auth_str = server_user_name + ':' + server_password
-byte_str = auth_str.encode('ascii')
-encoded_data = base64.b64encode(byte_str)
-basic_auth = 'Basic ' + str(encoded_data, encoding='utf-8')
-
-# Delete the credential variables for security purposes.
-del server_user_name, server_password, auth_str, byte_str
+# This auth tuple can be passed to `requests` functions as the `auth` argument.
+# (An HTTP Basic Authentication header will be generated and used automatically)
+auth = (server_user_name, server_password)
 
 
 # ---
@@ -99,7 +101,6 @@ grid_id = input('Enter grid ID: ') # e.g. North Central Zone
 
 # Get all the `grid_elements` of type `Meter`. 
 grid_element_type = 'Meter'
-url_grid_explorer = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid_explorer'
 
 params = {
         'limit': '30000',
@@ -110,7 +111,8 @@ params = {
         'grid_element_type': grid_element_type,
 }
 
-grid_elements = cr.get_rest_api(url_grid_explorer, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid_explorer', auth=auth, params=params)
+grid_elements = pd.json_normalize(response.json())
 grid_elements
 
 
@@ -120,7 +122,13 @@ grid_elements
 
 
 # Unpack the data frame, group the results by phases, count the number of elements in each phase and display the results. 
-df_meters_by_phases = cr.unpack_json(grid_elements, 'results').groupby(by='phases').count().reset_index()[['phases', 'id']].rename(columns={'id': 'number_of_meters'})
+df_meters_by_phases = (
+    pd.json_normalize(grid_elements.to_dict('records'), record_path='results')
+    .groupby(by='phases')
+    .count()
+    .reset_index()[['phases', 'id']]
+    .rename(columns={'id': 'number_of_meters'})
+)
 df_meters_by_phases
 
 
@@ -147,7 +155,13 @@ fig.show()
 
 
 # Unpack the data frame, group the results by consumer types, count the number of elements in each type and display the results. 
-df_meters_by_consumer_types = cr.unpack_json(grid_elements, 'results').groupby(by='type_of_consumer').count().reset_index()[['type_of_consumer', 'id']].rename(columns={'id': 'number_of_meters', 'type_of_consumer': 'consumer_type'})
+df_meters_by_consumer_types = (
+    pd.json_normalize(grid_elements.to_dict('records'), record_path='results')
+    .groupby(by='type_of_consumer')
+    .count()
+    .reset_index()[['type_of_consumer', 'id']]
+    .rename(columns={'id': 'number_of_meters', 'type_of_consumer': 'consumer_type'})
+)
 df_meters_by_consumer_types
 
 
@@ -175,7 +189,14 @@ fig.show()
 
 
 # Unpack the data frame, group the results by phases and consumer type, count the number of elements in each category and display the results. 
-df_meters = cr.unpack_json(grid_elements, 'results').groupby(by=['phases', 'type_of_consumer']).count().reset_index()[['phases', 'type_of_consumer', 'id']].rename(columns={'id': 'number_of_meters', 'type_of_consumer': 'consumer_type'}).sort_values(by='phases', key=lambda x: x.str.len(), ascending=False)
+df_meters = (
+    pd.json_normalize(grid_elements.to_dict('records'), record_path='results')
+    .groupby(by=['phases', 'type_of_consumer'])
+    .count()
+    .reset_index()[['phases', 'type_of_consumer', 'id']]
+    .rename(columns={'id': 'number_of_meters', 'type_of_consumer': 'consumer_type'})
+    .sort_values(by='phases', key=lambda x: x.str.len(), ascending=False)
+)
 df_meters
 
 

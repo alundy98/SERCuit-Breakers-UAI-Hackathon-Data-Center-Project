@@ -18,29 +18,30 @@
 # 
 # For more details about transformer load and how it can be analyzed using Awesense's platform, please refer to the [UC38-01 - Transformer Load Increase Assessment Tool](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC38-01%20-%20Transformer%20Load%20Increase%20Assessment%20Tool.pdf) document.
 # 
-# It is assumed that the user has been given access to the Awesense api-connect developer portal along with the necessary credentials for accessing Sandbox tier 2 & 3. Otherwise, please contact us at [api@awesense.com](api@awesense.com). 
-#  
-# You can find more information about how to use Awesense's api-connect developer portal in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
+# It is assumed that the user has been given credentials for accessing the Awesense Sandbox. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
+# 
+# You can find more information about how to use Awesense's REST API in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
 
 # ## Setup 
 
 # In[1]:
 
 
+from datetime import datetime
 import getpass
-import plotly.express as px
+from io import StringIO
+
 import pandas as pd
-import base64
-import callrestapi as cr
+import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime
 import pytz
+import requests
 
 pd.set_option("display.max_columns", None)
 
 
-# #### Connection
+# ### Connection
 # 
 # Enter the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
@@ -48,36 +49,38 @@ pd.set_option("display.max_columns", None)
 # In[2]:
 
 
-# Enter your username and password to log into the server.
-server_user_name = getpass.getpass(prompt="Username: ")
+# Enter the REST server origin or hostname (optionally without "https://")
+server_hostname = getpass.getpass(prompt="REST server address: ")
+# Ensure that the server address does not specify plaintext HTTP
+assert (server_hostname.startswith("http://") == False), "Server address uses https:// for secure communications, not http://"
+
+# Support the case where the specified address already included `https://`, otherwise add it
+if server_hostname.startswith("https://"):
+    server_origin = server_hostname
+else:
+    server_origin = f"https://{server_hostname}"
 
 
 # In[3]:
 
 
-server_password = getpass.getpass(prompt="Password: ")
+# Enter the username that you use to log into the server
+server_user_name = getpass.getpass(prompt='Username: ')
 
 
 # In[4]:
 
 
-# Enter the subscription key (primary or secondary) from the `Profile` page on the api-connect developer portal website.
-# If you don't have a subscription key, you will need to create one.
-# To do so, go to the `Products` page on the api-connect developer portal website, click on the desired product name, enter a product description, and click `Subscribe`.
-subscription_key = getpass.getpass(prompt="Subscription Key: ")
+# Enter the password that you use to log into the server
+server_password = getpass.getpass(prompt='Password: ')
 
 
 # In[5]:
 
 
-# Create a BasicAuth credential based on user_name and password.
-auth_str = server_user_name + ":" + server_password
-byte_str = auth_str.encode("ascii")
-encoded_data = base64.b64encode(byte_str)
-basic_auth = "Basic " + str(encoded_data, encoding="utf-8")
-
-# Delete the credential variables for security purposes.
-del server_user_name, server_password, auth_str, byte_str
+# This auth tuple can be passed to `requests` functions as the `auth` argument.
+# (An HTTP Basic Authentication header will be generated and used automatically)
+auth = (server_user_name, server_password)
 
 
 # ---
@@ -101,7 +104,7 @@ grid_id = input("Enter grid ID: ")  # e.g. North Central Zone
 if grid_id == "awefice":
     time_zone = "America/Vancouver"
 elif grid_id == "North Central Zone":
-    time_zone = "US/Eastern"
+    time_zone = "America/New_York"
 
 
 # In[8]:
@@ -145,11 +148,6 @@ print(converted_dates)
 
 
 # Use the tracing endpoint to find the transformer above the `meter_id`.
-prefix_name = "transformer"
-url_grid_trace = (
-    "https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/trace"
-)
-
 params = {
     "trace_type": "upstream",
     "output_type": "transformer_download",
@@ -157,15 +155,8 @@ params = {
     "grid_element_id": meter_id,
 }
 
-transformer_above_meter_id = cr.get_rest_api(
-    url_grid_trace,
-    subscription_key,
-    basic_auth,
-    format="csv_download",
-    params=params,
-    element_id=meter_id,
-    csv_file_prefix=prefix_name,
-)
+response = requests.get(f"{server_origin}/api/v1/grid/trace", auth=auth, params=params)
+transformer_above_meter_id = pd.read_csv(StringIO(response.content.decode("utf-8")))
 
 # Get only the transformers with `ML/LV` voltage level.
 transformer_above_meter_id = transformer_above_meter_id.loc[
@@ -181,10 +172,6 @@ transformer_above_meter_id
 
 # Use the trace endpoint to find all the meters downstream of the transformer.
 transformer_id = transformer_above_meter_id["ID"].iloc[0]
-prefix_name = "meter_downstream"
-url_grid_trace = (
-    "https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/trace"
-)
 
 params = {
     "trace_type": "downstream",
@@ -193,15 +180,8 @@ params = {
     "grid_element_id": transformer_id,
 }
 
-meters_downstream_of_transformer = cr.get_rest_api(
-    url_grid_trace,
-    subscription_key,
-    basic_auth,
-    format="csv_download",
-    params=params,
-    element_id=transformer_id,
-    csv_file_prefix=prefix_name,
-)
+response = requests.get(f"{server_origin}/api/v1/grid/trace", auth=auth, params=params)
+meters_downstream_of_transformer = pd.read_csv(StringIO(response.content.decode("utf-8")))
 meters_downstream_of_transformer
 
 
@@ -214,7 +194,6 @@ meters_downstream_of_transformer
 transformer_ts = pd.DataFrame()
 for meter_index, row in meters_downstream_of_transformer.iterrows():
     meter_element_id = meters_downstream_of_transformer["ID"][meter_index]
-    url_grid_ts_consumer = f"https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{meter_element_id}/data"
 
     params = {
         "units": "kWh",
@@ -226,13 +205,8 @@ for meter_index, row in meters_downstream_of_transformer.iterrows():
         "export": "false",
     }
 
-    ts = cr.get_rest_api(
-        url_grid_ts_consumer,
-        subscription_key,
-        basic_auth,
-        format="json_format",
-        params=params,
-    )
+    response = requests.get(f"{server_origin}/api/v1/grid/{grid_id}/element/{meter_element_id}/data", auth=auth, params=params)
+    ts = pd.json_normalize(response.json())
     ts["meter_id"] = meter_element_id
     transformer_ts = pd.concat([transformer_ts, ts])
 transformer_ts
@@ -243,7 +217,11 @@ transformer_ts
 
 # Unpack the meters' time series, aggregate the total hourly load, and rename the 'amount' column.
 transformer_aggregate_ts = (
-    cr.unpack_json(transformer_ts, "series", ["units", "meter_id"])
+    pd.json_normalize(
+        transformer_ts.to_dict("records"),
+        record_path="series",
+        meta=["units", "meter_id"]
+    )
     .groupby(by=["timestamp"])
     .sum()
     .reset_index()[["timestamp", "amount"]]

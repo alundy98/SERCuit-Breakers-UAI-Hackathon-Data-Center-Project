@@ -117,7 +117,7 @@ del edm_name, edm_password
 
 
 def plot_available_capacity(df: pd.DataFrame, title: str) -> None:
-    """"
+    """
     The function plots the distribution of available capacity over the hours of the day. It is typically used for one feeder at a time.
 
     Parameters:

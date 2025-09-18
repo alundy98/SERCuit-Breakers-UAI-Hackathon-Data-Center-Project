@@ -10,11 +10,9 @@
 #      * Information about grid elements
 #      * Tracing information from specific grid element
 #      * Time series for different grid elements 
-# * The data returned by the REST API is in JSON format. To extract and display the information more clearly, different formats such as 'json_format', and 'csv_download' are used in the notebook. The 'json_format' is the default and works all the time. It displays a data frame using the first-level JSON objects, which can be further expanded. 
+# * The data returned by the REST API is typically returned in JSON format; `pandas.json_normalize` is used in this notebook to display the results as a data frame using the first-level JSON objects, which can be further expanded. Some endpoints support alternately returning a response in different formats e.g. CSV; `pandas.read_csv` is used in this notebook for parsing CSV data.
 # 
-# The notebook uses the Awesense api-connect developer portal: https://api-account.awesense.com/. The developer portal contains additional documentation regarding the endpoints used in this notebook, their available parameters and output options. Please refer to it for more information. 
-# 
-# It is assumed that the user has been given access to the Awesense api-connect developer portal along with the necessary credentials for accessing Sandbox tier 1. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
+# It is assumed that the user has been given credentials for accessing Awesense Sandbox tiers 2 or 3. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
 
 # ---
 
@@ -24,48 +22,54 @@
 
 
 import getpass
+from io import StringIO
+
 import pandas as pd
-import base64
-import callrestapi as cr
+import requests
 
 pd.set_option('display.max_columns', None)
 
 
-# ### Connection Variables
+# ### Connection
+# 
+# Enter the login credentials provided by Awesense. If you do not have credentials or have any trouble connecting, please contact [api@awesense.com](api@awesense.com).
+# <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-# Enter the user_name, and password that you use to log into the server.
-server_user_name = getpass.getpass(prompt='Username: ')
+# Enter the REST server origin or hostname (optionally without "https://")
+server_hostname = getpass.getpass(prompt='REST server address: ')
+# Ensure that the server address does not specify plaintext HTTP
+assert (server_hostname.startswith('http://') == False), 'Server address uses https:// for secure communications, not http://'
+
+# Support the case where the specified address already included `https://`, otherwise add it
+if server_hostname.startswith('https://'):
+    server_origin = server_hostname
+else:
+    server_origin = f'https://{server_hostname}'
 
 
 # In[3]:
 
 
-server_password = getpass.getpass(prompt='Password: ')
+# Enter the username that you use to log into the server
+server_user_name = getpass.getpass(prompt='Username: ')
 
 
 # In[4]:
 
 
-# Enter the subscription key (primary or secondary) from the `Profile` page on the api-connect developer portal website. 
-# If you don't have a subscription key, you will need to create one. 
-# To do so, go to the `Products` page on the api-connect developer portal website, click on the desired product name, enter a product description, and click `Subscribe`. 
-subscription_key = getpass.getpass(prompt='Subscription Key: ')
+# Enter the password that you use to log into the server
+server_password = getpass.getpass(prompt='Password: ')
 
 
 # In[5]:
 
 
-# Create BasicAuth credential based on user_name and password.  
-auth_str = server_user_name + ':' + server_password
-byte_str = auth_str.encode('ascii')
-encoded_data = base64.b64encode(byte_str)
-basic_auth = 'Basic ' + str(encoded_data, encoding='utf-8')
-
-# Delete the credential variables for security purposes.
-del server_user_name, server_password, auth_str, byte_str
+# This auth tuple can be passed to `requests` functions as the `auth` argument.
+# (An HTTP Basic Authentication header will be generated and used automatically)
+auth = (server_user_name, server_password)
 
 
 # ---
@@ -78,8 +82,8 @@ del server_user_name, server_password, auth_str, byte_str
 
 
 # Get all the grids. 
-url_grid = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid'
-grids = cr.get_rest_api(url_grid, subscription_key, basic_auth, format = 'json_format')
+response = requests.get(f'{server_origin}/api/v1/grid', auth=auth)
+grids = pd.json_normalize(response.json())
 grids
 
 
@@ -95,7 +99,6 @@ grids
 # The following example gets information about type 'Meter'.
 grid_id = 'awefice'
 grid_element_type = 'Meter'
-url_grid_explorer = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid_explorer'
 
 params = {
         'limit': '30',
@@ -106,7 +109,8 @@ params = {
         'grid_element_type': grid_element_type,
 }
 
-grid_elements = cr.get_rest_api(url_grid_explorer, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid_explorer', auth=auth, params=params)
+grid_elements = pd.json_normalize(response.json())
 grid_elements
 
 
@@ -115,7 +119,7 @@ grid_elements
 
 # The above data frame contains lists of dictionaries that must be unpacked for viewing the results.
 # Unpack the `results` column to view all the meters.
-results = cr.unpack_json(grid_elements, 'results')
+results = pd.json_normalize(grid_elements.to_dict('records'), record_path='results')
 results.head()
 
 
@@ -134,7 +138,6 @@ results.id
 # information about all the different properties of the various grid element types.
 grid_id = 'awefice'
 grid_element_type = 'Photovoltaic'
-url_grid_explorer = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid_explorer'
 
 params = {
         'limit': '10',
@@ -145,7 +148,8 @@ params = {
         'grid_element_type': grid_element_type,
 }
 
-grid_elements_pv = cr.get_rest_api(url_grid_explorer, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid_explorer', auth=auth, params=params)
+grid_elements_pv = pd.json_normalize(response.json())
 grid_elements_pv
 
 
@@ -153,7 +157,7 @@ grid_elements_pv
 
 
 # Unpack the `results` column to view the elements.
-results = cr.unpack_json(grid_elements_pv, 'results')
+results = pd.json_normalize(grid_elements_pv.to_dict('records'), record_path='results')
 results.head()
 
 
@@ -172,13 +176,13 @@ results.id
 # Get details about specific grid elements. 
 grid_id = 'awefice'
 grid_element = 'm_6'
-url_grid_element = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{grid_element}'
 
 params = {
         'all_sources': 'true'
 }
 
-grid_element_details = cr.get_rest_api(url_grid_element, subscription_key, basic_auth, format = 'json_format', params=params )
+response = requests.get(f'{server_origin}/api/v1/grid/{grid_id}/element/{grid_element}', auth=auth, params=params)
+grid_element_details = pd.json_normalize(response.json())
 grid_element_details
 
 
@@ -188,7 +192,11 @@ grid_element_details
 # Unpack the `grid_data_source` column containing the list of dictionaries.
 # The grid_data_source ID represents the linking between time-series data and physical elements on the grid. 
 # The ID is used further down in this notebook to retrieve the time series. 
-cr.unpack_json(grid_element_details, 'grid_data_sources', ['customer_type', 'meta.address'])
+pd.json_normalize(
+    grid_element_details.to_dict('records'),
+    record_path='grid_data_sources',
+    meta=['customer_type', 'meta.address']
+)
 
 
 # ### Grid Tracing
@@ -196,11 +204,9 @@ cr.unpack_json(grid_element_details, 'grid_data_sources', ['customer_type', 'met
 # In[15]:
 
 
-# The example below demonstrates the tracing of transformers from a meter in an upstream direction. The results are saved to a CSV file. 
+# The example below demonstrates the tracing of transformers from a meter in an upstream direction. The results are exported in CSV format.
 grid_id = 'awefice'
 grid_element_id = 'm_6'
-prefix_name = 'upstream_tracing'
-url_grid_trace = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/trace'
 
 params = {
         'trace_type': 'upstream',
@@ -209,7 +215,8 @@ params = {
         'grid_element_id': grid_element_id,
 }
 
-grid_element_trace = cr.get_rest_api(url_grid_trace, subscription_key, basic_auth, format = 'csv_download', params=params, element_id=grid_element_id, csv_file_prefix=prefix_name)
+response = requests.get(f'{server_origin}/api/v1/grid/trace', auth=auth, params=params)
+grid_element_trace = pd.read_csv(StringIO(response.content.decode('utf-8')))
 grid_element_trace
 
 
@@ -217,10 +224,10 @@ grid_element_trace
 
 
 # The example below demonstrates the tracing from transformers in a downstream direction.  
-# For more information about different types of traces and output sources, please refer to the documentation in the API-connect developer portal.
+# For more information about different types of traces and outputs, please refer to the REST API documentation, 
+# accessible from the TGI help (?) menu or in the api-connect developer portal.
 grid_id = 'awefice'
 grid_element_id = 'transformer_2'
-url_grid_trace = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/trace'
 
 params = {
         'trace_type': 'downstream',
@@ -229,7 +236,8 @@ params = {
         'grid_element_id': grid_element_id,
 }
 
-grid_element_trace = cr.get_rest_api(url_grid_trace, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid/trace', auth=auth, params=params)
+grid_element_trace = pd.json_normalize(response.json())
 grid_element_trace
 
 
@@ -237,12 +245,12 @@ grid_element_trace
 
 
 # Unpack the `consumers_breakdown` column containing the list of dictionaries. 
-cr.unpack_json(grid_element_trace, 'consumers_breakdown')
+pd.json_normalize(grid_element_trace.to_dict('records'), record_path='consumers_breakdown')
 
 
 # ### Time Series
 # 
-# There are different endpoints for retrieving time series, each suited for different use cases. For more information, refer to the api-connect developer portal documentation.
+# There are different endpoints for retrieving time series, each suited for different use cases. For more information, please refer to the REST API documentation accessible from the TGI help (?) menu or in the api-connect developer portal.
 
 # In[18]:
 
@@ -250,7 +258,6 @@ cr.unpack_json(grid_element_trace, 'consumers_breakdown')
 # Get time series data associated with a given grid data source.
 grid_id = 'awefice'
 grid_data_source = '84e32b3f-1cf6-4b8a-9a55-f59ec574f8c1' # From the details grid element above
-url_grid_data_source = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/grid_data_source/{grid_data_source}/data'
 
 params = {
         'units': 'kWh',
@@ -263,7 +270,8 @@ params = {
         'export': 'false'
 }
 
-ts = cr.get_rest_api(url_grid_data_source, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid/grid_data_source/{grid_data_source}/data', auth=auth, params=params)
+ts = pd.json_normalize(response.json())
 ts
 
 
@@ -271,7 +279,7 @@ ts
 
 
 # Unpack the time series and include the `units` column. 
-grid_element_ts = cr.unpack_json(ts, 'series', ['units'])
+grid_element_ts = pd.json_normalize(ts.to_dict('records'), record_path='series', meta=['units'])
 grid_element_ts
 
 
@@ -279,12 +287,9 @@ grid_element_ts
 
 
 # Get consumption data for any grid element with associated grid data sources of type CONSUMER. 
-# This example exports the result to a CSV file. 
+# This example exports the results in CSV format. 
 grid_id = 'awefice'
 grid_element_id = 'm_6'
-prefix_name = 'time_series'
-url_grid_ts_consumer = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{grid_element_id}/data'
-
 params = {
         'units': 'kWh',
         'group_by': 'hour',
@@ -295,11 +300,12 @@ params = {
         'export': 'true'
 }
 
-grid_element_ts = cr.get_rest_api(url_grid_ts_consumer, subscription_key, basic_auth,  format = 'csv_download', params=params, element_id=grid_element_id, csv_file_prefix=prefix_name)
+response = requests.get(f'{server_origin}/api/v1/grid/{grid_id}/element/{grid_element_id}/data', auth=auth, params=params)
+grid_element_ts = pd.read_csv(StringIO(response.content.decode('utf-8')))
 grid_element_ts
 
 
-# The Following cells use the North Central Zone grid. To run the code in these cells it in necessary to have access credentials and point the notebook to the Sandbox tier 2&3 server
+# The following cells use the North Central Zone grid. To run the code in these cells it in necessary to have access credentials and point the notebook to the Sandbox tier 2&3 server.
 
 # In[21]:
 
@@ -307,7 +313,6 @@ grid_element_ts
 # Get any kind of time-series data for a grid element. 
 grid_id = 'North Central Zone'
 grid_element_id = '7676'
-url_grid_ts_consumer = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{grid_element_id}/flexible_time_series_data'
 
 params = {
         'units': 'kW',
@@ -323,7 +328,8 @@ params = {
         'only_matching_units': 'false',
 }
 
-ts = cr.get_rest_api(url_grid_ts_consumer, subscription_key, basic_auth,  format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid/{grid_id}/element/{grid_element_id}/flexible_time_series_data', auth=auth, params=params)
+ts = pd.json_normalize(response.json())
 ts
 
 
@@ -331,7 +337,11 @@ ts
 
 
 # Unpack the time series for the different phases and include the `units`, and `source.friendly_id` columns.
-phase_ts = cr.unpack_json(ts, 'series', ['phase', 'units', 'source.friendly_id'])
+phase_ts = pd.json_normalize(
+    ts.to_dict('records'),
+    record_path='series',
+    meta=['phase', 'units', 'source.friendly_id']
+)
 phase_ts
 
 
@@ -341,7 +351,6 @@ phase_ts
 # Get per-phase time series data for each sensor (raptor or SCADA) associated with the given grid element.
 grid_id = 'North Central Zone'
 grid_element_id = '10680'
-url_grid_ts_consumer = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{grid_element_id}/chart_data'
 
 params = {
         'units': 'kWh',
@@ -353,7 +362,8 @@ params = {
         'include_sign': 'false'
 }
 
-ts = cr.get_rest_api(url_grid_ts_consumer, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid/{grid_id}/element/{grid_element_id}/chart_data', auth=auth, params=params)
+ts = pd.json_normalize(response.json())
 ts
 
 
@@ -361,15 +371,12 @@ ts
 
 
 # Unpack the time series for the different phases and add the `units` column. 
-per_phase = cr.unpack_json(ts, 'series', ['phase', 'units'])
+per_phase = pd.json_normalize(
+    ts.to_dict('records'),
+    record_path='series',
+    meta=['phase', 'units']
+)
 per_phase
 
 
 # ---
-
-# In[25]:
-
-
-# Delete the credential variables for security purposes.
-del subscription_key, basic_auth
-

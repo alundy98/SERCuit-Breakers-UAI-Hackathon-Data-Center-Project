@@ -28,11 +28,11 @@ import urllib.parse
 # In[2]:
 
 
-edm_address = getpass.getpass(prompt="EDM server address: ")
+edm_address = getpass.getpass(prompt='EDM server address: ')
 
-print("\nEDM login information")
-edm_name = getpass.getpass(prompt="Username: ")
-edm_password = getpass.getpass(prompt="Password: ")
+print('\nEDM login information')
+edm_name = getpass.getpass(prompt='Username: ')
+edm_password = getpass.getpass(prompt='Password: ')
 edm_password = urllib.parse.quote(edm_password)
 
 get_ipython().run_line_magic('load_ext', 'sql')

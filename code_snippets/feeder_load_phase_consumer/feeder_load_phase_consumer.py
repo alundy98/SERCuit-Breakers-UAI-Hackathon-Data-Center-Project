@@ -64,7 +64,7 @@ del edm_name, edm_password
 
 
 def net_flow_bar(df, title):
-    """"
+    """
     Plot a bar chart of net flow by consumer type
     """
     fig = px.bar(df, x="consumer_type", y="kWh", 

@@ -52,7 +52,7 @@ get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_a
 get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
 get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
 
-# Delete the credential variables for security purpose.
+# Delete the credential variables for security purposes.
 del edm_name, edm_password
 
 

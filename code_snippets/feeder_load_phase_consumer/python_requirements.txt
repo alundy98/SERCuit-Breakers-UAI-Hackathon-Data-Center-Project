@@ -1,2 +1,0 @@
-# Used if wanting to run on Python 3.7. On Python 3.9 this requirement can be removed and the regular zoneinfo library directly imported in the notebook.
-backports.zoneinfo==0.2.1

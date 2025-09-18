@@ -26,9 +26,10 @@ If it is your first time working with EDM, [intro_and_tutorial](intro_and_tutori
 
 
 ### Install Dependencies
-The notebooks in this repository have been mainly developed and tested using Python 3.9, although some of them can run on Python 3.7 as well. For the purpose of using this repository it is assumed that both Python and pip3 are already installed.
-Please note that there are multiple python_requirements.txt files in this repository. The basic set of libraries required for all examples except for use cases and code snippets is at the main folder level. Any additional libraries specific to each use case or snippet are at the specific use_cases/name_of_use_case or code_snippets/name_of_code_snippet folder level.
+The notebooks in this repository have been tested using Python versions from 3.9 up to 3.13. For the purpose of using this repository it is assumed that both `python` and `pip3` are already installed.
+Please note that there are multiple `python_requirements.txt` files in this repository. The basic set of libraries required for all examples except for use cases and code snippets is at the main folder level. Any additional libraries specific to each use case or snippet are at the specific `use_cases/<name_of_use_case>` or `code_snippets/<name_of_code_snippet>` folder level.
 
+#### Linux/MacOS Installation
 In order to create a clean virtual environment for this repository, the following commands should be executed from a terminal opened in the directory this README is in:
 ```bash
 python3 -m venv /your/desired/directory # While this only needs to be run once, repeated executions will not erase the existing libraries
@@ -37,10 +38,17 @@ pip3 install -r python_requirements.txt
 python3 -m ipykernel install --user # Ensures that the Python3 kernel uses the new venv as expected
 ```
 
-If restarting your command line terminal, only the `source` command needs to be re-run. If the `python_requirements.txt` file was updated, then the `pip3 install` and `python3 -m` commands must also be run again.
+#### Windows Installation
+Users in a Windows environment must download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) in order for `pip` to be able to build all the dependencies properly.
+For users using PowerShell, the virtual environment commands differ slightly (aside from Windows using backslash).
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope Process
+.\your\desired\directory\Scripts\activate
+```
+
+If restarting your command line terminal, only the command invoking `activate` needs to be re-run. If the `python_requirements.txt` file was updated, then the `pip3 install` and `python3 -m` commands must also be run again.
 
 Please refer to the [use_cases' README](/use_cases/README.md) for instructions on installing the additional libraries specific to a given use case.
-
 
 ## Sandbox Dataset
 

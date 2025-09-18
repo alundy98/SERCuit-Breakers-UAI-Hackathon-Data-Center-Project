@@ -1,7 +1,14 @@
+from warnings import deprecated
+
 import requests
 import pandas as pd
 
 
+@deprecated(
+    "This function is a legacy approach using the api-connect gateway. "
+    "REST API requests may be send directly to the backend instead. "
+    "See `intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb` for example usage."
+)
 def get_rest_api(
     url: str,
     key: str,

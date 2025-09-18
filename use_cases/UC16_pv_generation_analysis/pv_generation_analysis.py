@@ -65,7 +65,7 @@ del edm_name, edm_password
 
 
 def calc_pv_production(df):
-    """"
+    """
     Calculate true consumption and percentage of PV generation relative to true_consumption. 
     The energy values for CONSUMER, PRODUCER, and TRUE_GENERATION (in capital letters) are imported from the DB 
     using the grid_element_data_source function. 
@@ -91,7 +91,7 @@ def calc_pv_production(df):
 
 
 def plot_pv(df):
-    """"
+    """
     Plot the PV generation and its percentage with respect to consumption load. 
     """
     
@@ -126,7 +126,7 @@ def plot_pv(df):
     
 
 def plot_monthly_bar(df):
-    """"
+    """
     Plot the percentage of monthly PV generation and its all-time average. 
     """
 

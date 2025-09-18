@@ -3,7 +3,6 @@
 
 # ## Overview
 
-# 
 # This notebook is intended to:
 # 
 # * Display the yearly net flow per tariff group. 
@@ -16,9 +15,9 @@
 # * Aggregate the net flow by tariff groups.
 # * Display and plot the results. 
 # 
-# It is assumed that the user has been given access to the Awesense api-connect developer portal along with the necessary credentials for accessing Sandbox tier 1. Otherwise, please contact us at [api@awesense.com](api@awesense.com). 
+# It is assumed that the user has been given credentials for accessing the Awesense Sandbox. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
 # 
-# You can find more information about how to use Awesense's api-connect developer portal in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
+# You can find more information about how to use Awesense's REST API in the [access_and_basic_data_retrieval](https://github.com/Awesense/edm-app-examples/blob/master/intro_and_tutorials/rest_api/access_and_basic_data_retrieval.ipynb) notebook.
 
 # ---
 
@@ -27,55 +26,57 @@
 # In[1]:
 
 
-import getpass
-import plotly.express as px
-import pandas as pd
-import base64
 from datetime import datetime
+import getpass
+
+import pandas as pd
+import plotly.express as px
 import pytz
-import callrestapi as cr
+import requests
 
 pd.set_option('display.max_columns', None)
 
 
-# **Connection**
+# ### Connection
 # 
-# Enter the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com.
+# Enter the login credentials provided by Awesense. If you do not have credentials or have any trouble connecting, please contact [api@awesense.com](api@awesense.com).
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
 # In[2]:
 
 
-# Enter your username and password to log into the server.
-server_user_name = getpass.getpass(prompt='Username: ')
+# Enter the REST server origin or hostname (optionally without "https://")
+server_hostname = getpass.getpass(prompt='REST server address: ')
+# Ensure that the server address does not specify plaintext HTTP
+assert (server_hostname.startswith('http://') == False), 'Server address uses https:// for secure communications, not http://'
+
+# Support the case where the specified address already included `https://`, otherwise add it
+if server_hostname.startswith('https://'):
+    server_origin = server_hostname
+else:
+    server_origin = f'https://{server_hostname}'
 
 
 # In[3]:
 
 
-server_password = getpass.getpass(prompt='Password: ')
+# Enter the username that you use to log into the server
+server_user_name = getpass.getpass(prompt='Username: ')
 
 
 # In[4]:
 
 
-# Enter the subscription key (primary or secondary) from the `Profile` page on the api-connect developer portal website. 
-# If you don't have a subscription key, you will need to create one. 
-# To do so, go to the `Products` page on the api-connect developer portal website, click on the desired product name, enter a product description, and click `Subscribe`. 
-subscription_key = getpass.getpass(prompt='Subscription Key: ')
+# Enter the password that you use to log into the server
+server_password = getpass.getpass(prompt='Password: ')
 
 
 # In[5]:
 
 
-# Create a BasicAuth credential based on user_name and password.  
-auth_str = server_user_name + ':' + server_password
-byte_str = auth_str.encode('ascii')
-encoded_data = base64.b64encode(byte_str)
-basic_auth = 'Basic ' + str(encoded_data, encoding='utf-8')
-
-# Delete the credential variables for security purposes.
-del server_user_name, server_password, auth_str, byte_str
+# This auth tuple can be passed to `requests` functions as the `auth` argument.
+# (An HTTP Basic Authentication header will be generated and used automatically)
+auth = (server_user_name, server_password)
 
 
 # ---
@@ -115,7 +116,6 @@ end_date = dt_end_UTC.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
 # Get all the `grid_elements` of type `Meter`.
 grid_element_type = 'Meter'
-url_grid_explorer = 'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid_explorer'
 
 params = {
         'limit': '30000',
@@ -126,7 +126,8 @@ params = {
         'grid_element_type': grid_element_type,
 }
 
-grid_elements = cr.get_rest_api(url_grid_explorer, subscription_key, basic_auth, format = 'json_format', params=params)
+response = requests.get(f'{server_origin}/api/v1/grid_explorer', auth=auth, params=params)
+grid_elements = pd.json_normalize(response.json())
 grid_elements
 
 
@@ -134,7 +135,13 @@ grid_elements
 
 
 # Unpack the data frame and display 'meter_id' and 'tariff_id`.
-df_meters_tariff = cr.unpack_json(grid_elements, 'results')[['id', 'tariff_id']].rename(columns={'id': 'meter_id'}).sort_values(by='tariff_id').reset_index(drop=True)
+df_meters_tariff = (
+    pd.json_normalize(grid_elements.to_dict('records'), record_path='results')
+    [['id', 'tariff_id']]
+    .rename(columns={'id': 'meter_id'})
+    .sort_values(by='tariff_id')
+    .reset_index(drop=True)
+)
 df_meters_tariff.head()
 
 
@@ -145,7 +152,6 @@ df_meters_tariff.head()
 df_ts = pd.DataFrame()
 for meter_id, row in df_meters_tariff.iterrows():
         grid_element_id = df_meters_tariff['meter_id'][meter_id]
-        url_grid_ts_consumer = f'https://api-connect.awesense.com/basic_data_retrieval/api/v1/grid/{grid_id}/element/{grid_element_id}/data'
 
         params = {
                 'units': 'kWh',
@@ -157,7 +163,8 @@ for meter_id, row in df_meters_tariff.iterrows():
                 'export': 'false'
         }
 
-        ts = cr.get_rest_api(url_grid_ts_consumer, subscription_key, basic_auth,  format = 'json_format', params=params)
+        response = requests.get(f'{server_origin}/api/v1/grid/{grid_id}/element/{grid_element_id}/data', auth=auth, params=params)
+        ts = pd.json_normalize(response.json())
         ts['meter_id'] = grid_element_id
         df_ts = pd.concat([df_ts, ts])
 df_ts.head()
@@ -167,7 +174,15 @@ df_ts.head()
 
 
 # Unpack the results and include the `meter_id` columns.
-df_tariff = cr.unpack_json(df_ts, 'series', ['meter_id']).rename(columns={'amount': 'net_kWh'}).drop(columns=['period'])
+df_tariff = (
+    pd.json_normalize(
+        df_ts.to_dict('records'),
+        record_path='series',
+        meta=['meter_id']
+    )
+    .rename(columns={'amount': 'net_kWh'})
+    .drop(columns=['period'])
+)
 df_tariff.head()
 
 

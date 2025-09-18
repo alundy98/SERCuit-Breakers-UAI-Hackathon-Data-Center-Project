@@ -64,7 +64,7 @@ del edm_name, edm_password
 
 
 def bar_plot(df, x_axis, y_axis, title, labels, average=False):
-    """"
+    """
     Plot bar graphs of meters' master circuit breaker values or the ratio of meters' maximum hourly consumer loads to 
     to master circuit breaker values.
     """
