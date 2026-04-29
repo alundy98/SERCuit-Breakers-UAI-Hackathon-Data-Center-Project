@@ -16,7 +16,7 @@
 # The results of this tool will help decision-makers assess the need for transformer upgrades and will help avoid potential damage to existing transformers.
 # 
 # 
-# For more details about transformer load and how it can be analyzed using Awesense's platform, please refer to the [UC38-01 - Transformer Load Increase Assessment Tool](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC38-01%20-%20Transformer%20Load%20Increase%20Assessment%20Tool.pdf) document.
+# For more details about transformer load and how it can be analyzed using Awesense's platform, please refer to the [UC38 - Transformer Load Increase Assessment Tool](https://github.com/Awesense/edm-app-examples/blob/master/use_cases/usecase_descriptions/UC38%20-%20Transformer%20Load%20Increase%20Assessment%20Tool.pdf) document.
 # 
 # It is assumed that the user has been given credentials for accessing the Awesense Sandbox. Otherwise, please contact us at [api@awesense.com](api@awesense.com).
 # 
@@ -46,13 +46,15 @@ pd.set_option("display.max_columns", None)
 # Enter the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
 # Enter the REST server origin or hostname (optionally without "https://")
 server_hostname = getpass.getpass(prompt="REST server address: ")
 # Ensure that the server address does not specify plaintext HTTP
-assert (server_hostname.startswith("http://") == False), "Server address uses https:// for secure communications, not http://"
+assert (
+    server_hostname.startswith("http://") == False
+), "Server address uses https:// for secure communications, not http://"
 
 # Support the case where the specified address already included `https://`, otherwise add it
 if server_hostname.startswith("https://"):
@@ -61,18 +63,18 @@ else:
     server_origin = f"https://{server_hostname}"
 
 
-# In[3]:
+# In[ ]:
 
 
 # Enter the username that you use to log into the server
-server_user_name = getpass.getpass(prompt='Username: ')
+server_user_name = getpass.getpass(prompt="Username: ")
 
 
-# In[4]:
+# In[ ]:
 
 
 # Enter the password that you use to log into the server
-server_password = getpass.getpass(prompt='Password: ')
+server_password = getpass.getpass(prompt="Password: ")
 
 
 # In[5]:
@@ -121,10 +123,10 @@ meter_id = input("Enter meter ID: ")  # e.g. 13Y68ZB or 16A3Y52-1
 additional_load = input("Enter required load in kW: ")  # e.g. 6.0
 
 
-# In[10]:
+# In[ ]:
 
 
-# Define the start and end dates for the analysis and convert them to UTC using the appropriate format. 
+# Define the start and end dates for the analysis and convert them to UTC using the appropriate format.
 local_start_and_end_dates = ["2023-01-01 00:00:00", "2023-12-31 23:00:00"]
 
 converted_dates = []
@@ -132,10 +134,10 @@ converted_dates = []
 local_timezone_obj = pytz.timezone(time_zone)
 
 for date_str in local_start_and_end_dates:
-    local_date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    local_date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
     localized_date = local_timezone_obj.localize(local_date_obj)
     utc_date = localized_date.astimezone(pytz.utc)
-    formatted_utc_date = utc_date.strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+    formatted_utc_date = utc_date.strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
     converted_dates.append(formatted_utc_date)
 
 print(converted_dates)
@@ -167,7 +169,7 @@ transformer_above_meter_id
 
 # #### Meter Information
 
-# In[12]:
+# In[ ]:
 
 
 # Use the trace endpoint to find all the meters downstream of the transformer.
@@ -181,13 +183,15 @@ params = {
 }
 
 response = requests.get(f"{server_origin}/api/v1/grid/trace", auth=auth, params=params)
-meters_downstream_of_transformer = pd.read_csv(StringIO(response.content.decode("utf-8")))
+meters_downstream_of_transformer = pd.read_csv(
+    StringIO(response.content.decode("utf-8"))
+)
 meters_downstream_of_transformer
 
 
 # #### Existing Transformer Load
 
-# In[13]:
+# In[ ]:
 
 
 # Use the `data` endpoint to get the net consumption for each meter downstream of the transformer.
@@ -205,14 +209,18 @@ for meter_index, row in meters_downstream_of_transformer.iterrows():
         "export": "false",
     }
 
-    response = requests.get(f"{server_origin}/api/v1/grid/{grid_id}/element/{meter_element_id}/data", auth=auth, params=params)
+    response = requests.get(
+        f"{server_origin}/api/v1/grid/{grid_id}/element/{meter_element_id}/data",
+        auth=auth,
+        params=params,
+    )
     ts = pd.json_normalize(response.json())
     ts["meter_id"] = meter_element_id
     transformer_ts = pd.concat([transformer_ts, ts])
 transformer_ts
 
 
-# In[14]:
+# In[ ]:
 
 
 # Unpack the meters' time series, aggregate the total hourly load, and rename the 'amount' column.
@@ -220,7 +228,7 @@ transformer_aggregate_ts = (
     pd.json_normalize(
         transformer_ts.to_dict("records"),
         record_path="series",
-        meta=["units", "meter_id"]
+        meta=["units", "meter_id"],
     )
     .groupby(by=["timestamp"])
     .sum()
@@ -293,18 +301,33 @@ peak_date_ts = transformer_aggregate_ts.loc[
 peak_date_ts.head()
 
 
-# In[17]:
+# In[ ]:
 
 
-# Rearrange the data frame to a format with an identifier variable and measured variables. This will allow for simple plotting. 
-peak_date_ts_for_plot = peak_date_ts.rename(columns={"power_kW": "Existing Load", "power_kW_with_additional_load": "Expected Load"})
-peak_date_ts_for_plot = pd.melt(peak_date_ts_for_plot, id_vars=["timestamp"], value_vars=["Existing Load", "Expected Load"], var_name="Loads", value_name="Average Hourly Power (kW)")
+# Rearrange the data frame to a format with an identifier variable and measured variables. This will allow for simple plotting.
+peak_date_ts_for_plot = peak_date_ts.rename(
+    columns={
+        "power_kW": "Existing Load",
+        "power_kW_with_additional_load": "Expected Load",
+    }
+)
+peak_date_ts_for_plot = pd.melt(
+    peak_date_ts_for_plot,
+    id_vars=["timestamp"],
+    value_vars=["Existing Load", "Expected Load"],
+    var_name="Loads",
+    value_name="Average Hourly Power (kW)",
+)
 
 # Plot the existing load, future load, and transformer's capacity during the day when maximum load occurs.
-fig = px.line(peak_date_ts_for_plot, x=peak_date_ts_for_plot["timestamp"].dt.hour, y="Average Hourly Power (kW)", color="Loads", title="Existing and Expected Loads", 
-              labels={
-                     "x": "Hour of the Day"
-                 },)
+fig = px.line(
+    peak_date_ts_for_plot,
+    x=peak_date_ts_for_plot["timestamp"].dt.hour,
+    y="Average Hourly Power (kW)",
+    color="Loads",
+    title="Existing and Expected Loads",
+    labels={"x": "Hour of the Day"},
+)
 fig.add_hline(
     y=peak_date_ts["capacity_kW"].unique()[0], annotation_text="Transformer's Capacity"
 )
@@ -361,7 +384,7 @@ fig.add_hline(
 )
 
 
-# In[19]:
+# In[ ]:
 
 
 # Find and display a histogram of the number of days and hours per day where the expected load could exceed the transformer's capacity.
@@ -374,11 +397,19 @@ number_of_hours_when_load_exceed_capacity = (
     .count()
 )
 
-number_of_days_when_load_exceeded_capacity = len(number_of_hours_when_load_exceed_capacity)
-number_of_days_when_load_did_not_exceed_capacity = len(transformer_aggregate_ts.timestamp.dt.date.unique()) - number_of_days_when_load_exceeded_capacity
-print(f"The number of days when load did not exceed available capacity is: {number_of_days_when_load_did_not_exceed_capacity} days")
-print(f"The number of days when load did exceed available capacity is: {number_of_days_when_load_exceeded_capacity} days")
-
+number_of_days_when_load_exceeded_capacity = len(
+    number_of_hours_when_load_exceed_capacity
+)
+number_of_days_when_load_did_not_exceed_capacity = (
+    len(transformer_aggregate_ts.timestamp.dt.date.unique())
+    - number_of_days_when_load_exceeded_capacity
+)
+print(
+    f"The number of days when load did not exceed available capacity is: {number_of_days_when_load_did_not_exceed_capacity} days"
+)
+print(
+    f"The number of days when load did exceed available capacity is: {number_of_days_when_load_exceeded_capacity} days"
+)
 
 
 fig = px.histogram(
@@ -388,9 +419,7 @@ fig = px.histogram(
     labels=dict(transformer_id="Number of Hours per Day of Exceed Capacity"),
     title="Number of Days and Hours per Day when Expected Load will Exceed the Transformer's Capacity",
 )
-fig.update_layout(
-    yaxis_title_text = "Number of Days"
-    )
+fig.update_layout(yaxis_title_text="Number of Days")
 fig.update_layout(bargap=0.2)
 fig.update_layout(height=500, width=1000)
 fig.update_xaxes(dtick=1)
