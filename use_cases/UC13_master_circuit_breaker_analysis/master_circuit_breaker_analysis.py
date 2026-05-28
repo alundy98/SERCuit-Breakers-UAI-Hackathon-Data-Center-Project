@@ -39,7 +39,7 @@ pd.set_option("display.max_columns", None)
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
 edm_address = getpass.getpass(prompt='EDM server address: ')
@@ -154,7 +154,7 @@ def map_it(df, title):
     """
 
     # Plot a map, and set the map style, and marker size.
-    fig = px.scatter_mapbox(
+    fig = px.scatter_map(
         df,
         lat="latitude",
         lon="longitude",
@@ -169,8 +169,22 @@ def map_it(df, title):
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_traces(marker={"size": 15})
 
-    # Configure the margin to show the title properly.
-    fig.update_layout(margin={"r": 0, "t": 60, "l": 40, "b": 0})
+    # Use custom (raster) tile server
+    fig.update_layout(
+        map_style="white-bg",
+        map_layers=[
+            {
+                "below": "traces",
+                "sourcetype": "raster",
+                "source": [
+                    "https://d.tile.awesense.com/{z}/{x}/{y}.png",
+                    "https://e.tile.awesense.com/{z}/{x}/{y}.png",
+                    "https://f.tile.awesense.com/{z}/{x}/{y}.png",
+                ],
+            }
+        ],
+        margin={"r": 0, "t": 60, "l": 40, "b": 0},
+    )
 
     fig.show()
 
@@ -191,12 +205,19 @@ grid_id = input("Enter grid ID: ")  # awefice
 
 # ### Data
 # #### Meters Information
-# Fetch all meters in the grid and their relevant information. 
+# Fetch the meters in the grid and their relevant information. Adjust the limit clause as desired.
 
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'result_meters <<', "\nSELECT ge2.grid_element_id as meter_id,\n    ge2.phases,\n    ge2.meta ->> 'maximal_demand' as maximal_demand,\n    ge2.meta ->> 'parent_transformer_id' as parent_transformer_id,\n    ge1.meta ->> 'secondary_voltage' as secondary_voltage,\n    st_x(ge2.geometry) as longitude,\n    st_y(ge2.geometry) as latitude,\n    ggs.grid_element_id as top_feeder_transformer\nFROM grid_element ge1\nINNER JOIN grid_element ge2\n    ON ge1.grid_element_id = ge2.meta ->> 'parent_transformer_id'\nJOIN grid_get_sources('{grid_id}', ge2.grid_element_id, 'true') ggs\n    ON true\nWHERE ge2.type = 'Meter'\n    AND ggs.type = 'Transformer'\n    AND ggs.is_producer = true\nORDER BY top_feeder_transformer, LENGTH(ge2.phases), ge2.phases,\n        cast(substring(ge2.grid_element_id, 3, 2) as int) asc;\n")
+# number of meters for the limit clause
+number_meters = 100
+
+
+# In[ ]:
+
+
+get_ipython().run_cell_magic('sql', 'result_meters <<', "\nWITH meters as (SELECT *\nFROM grid_element\nWHERE type='Meter'\nAND grid_id = '{grid_id}'\nORDER BY grid_element_id\nLIMIT {number_meters}\n)\n\nSELECT m.grid_element_id as meter_id,\n    m.phases,\n    m.meta ->> 'maximal_demand' as maximal_demand,\n    m.meta ->> 'parent_transformer_id' as parent_transformer_id,\n    ge1.meta ->> 'secondary_voltage' as secondary_voltage,\n    st_x(m.geometry) as longitude,\n    st_y(m.geometry) as latitude, ggs.grid_element_id as top_feeder_transformer\nFROM meters m\nINNER JOIN grid_element ge1\n    ON ge1.grid_element_id = m.meta ->> 'parent_transformer_id'\nJOIN grid_get_sources('{grid_id}', m.grid_element_id, 'true') ggs\n    ON true\nWHERE ggs.type = 'Transformer'\n    AND ggs.is_producer = true\nORDER BY top_feeder_transformer, LENGTH(m.phases), m.phases,\n        cast(substring(m.grid_element_id, 3, 2) as int) asc;\n")
 
 
 # Calculate meters' Master Circuit Breaker values
@@ -257,7 +278,7 @@ bar_plot(
 # #### Meters' Hourly Time Series
 # Fetch all meters in the grid and their hourly net consumer load time series. 
 
-# In[8]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic('sql', 'result_system <<', '\nSELECT tdss.timestamp at time zone \'America/Vancouver\' as timestamp,\n        ge.grid_element_id as meter_id,\n        tdss.value as "kWh",\n        geds.type\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss\n    ON TRUE\nWHERE geds.grid_id = \'{grid_id}\'\n    AND ge.type = \'Meter\'\n    AND geds.type = \'CONSUMER\'\nORDER BY tdss.timestamp;\n')

@@ -29,7 +29,7 @@ pd.set_option("display.max_columns", None)
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
 edm_address = getpass.getpass(prompt='EDM server address: ')
@@ -161,8 +161,17 @@ df2.shape[0]
 map_latitude = df["geo_latitude"].mean()
 map_longitude = df["geo_longitude"].mean()
 
-# Create the map.
-m = folium.Map(location=[map_latitude, map_longitude], zoom_start=12)
+# Create a folium TileLayer using custom map tile server
+custom_tiles_layer = folium.TileLayer(
+    tiles="https://{s}.tile.awesense.com/{z}/{x}/{y}.png",
+    subdomains=["d", "e", "f"],
+    attr='Map data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+)
+m = folium.Map(
+    location=[map_latitude, map_longitude],
+    tiles=custom_tiles_layer,
+    zoom_start=12,
+)
 
 for _, row in df2.iterrows():
     folium.Marker(

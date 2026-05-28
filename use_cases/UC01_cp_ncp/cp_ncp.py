@@ -17,7 +17,7 @@
 
 # ## Setup
 
-# In[1]:
+# In[ ]:
 
 
 import getpass
@@ -31,7 +31,7 @@ import plotly.express as px
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
 edm_address = getpass.getpass(prompt='EDM server address: ')
@@ -135,8 +135,7 @@ def plot_pie(df_cp, title):
 
 def map_it(df, meters, title):
     """
-    Plot a map of meters, with their colors and marker sizes dictated by the field called "value".
-    `meters` input is a SQL result set that will be convereted to a dataframe.
+    Plot a map of meters using custom Awesense tiles.
     """
 
     # Convert the SQL result set to dataframe, and cast the longitude and latitude to floats.
@@ -146,7 +145,7 @@ def map_it(df, meters, title):
     df_geo = df.merge(df_geo, on="grid_element_id")
 
     # Plot a map.
-    fig = px.scatter_mapbox(
+    fig = px.scatter_map(
         df_geo,
         lat="latitude",
         lon="longitude",
@@ -157,10 +156,23 @@ def map_it(df, meters, title):
         zoom=15,
         labels={"value": "Load (kW)"},
     )
-    fig.update_layout(mapbox_style="open-street-map")
 
-    # Configure margin to show the title properly.
-    fig.update_layout(margin={"r": 0, "t": 60, "l": 40, "b": 0})
+    # Use custom (raster) tile server
+    fig.update_layout(
+        map_style="white-bg",
+        map_layers=[
+            {
+                "below": "traces",
+                "sourcetype": "raster",
+                "source": [
+                    "https://d.tile.awesense.com/{z}/{x}/{y}.png",
+                    "https://e.tile.awesense.com/{z}/{x}/{y}.png",
+                    "https://f.tile.awesense.com/{z}/{x}/{y}.png",
+                ],
+            }
+        ],
+        margin={"r": 0, "t": 60, "l": 40, "b": 0},
+    )
 
     fig.show()
 
@@ -228,7 +240,7 @@ timerange = start[:10] + " ~ " + end[:10]
 
 # #### Data: Hourly Consumption Load Time Series 
 
-# In[5]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,\n        ge.grid_element_id,\n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh', '{timerange_tz}') tdss\n    ON TRUE\nWHERE geds.grid_id = '{grid_id}'\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER'\nORDER BY tdss.timestamp;\n")
