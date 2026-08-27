@@ -25,7 +25,9 @@
 import getpass
 import pandas as pd
 import numpy as np
-import urllib.parse
+import os
+import psycopg2
+from dotenv import load_dotenv
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from IPython.display import Markdown as md
@@ -38,24 +40,59 @@ pd.set_option("display.max_columns", None)
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials, or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
-edm_address = getpass.getpass(prompt='EDM server address: ')
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-print('\nEDM login information')
-edm_name = getpass.getpass(prompt='Username: ')
-edm_password = getpass.getpass(prompt='Password: ')
-edm_password = urllib.parse.quote(edm_password)
+if IN_COLAB:
+    from contextlib import suppress
+    print('☁️ Running in Google Colab. Using Colab Secrets for SQLAPI connection')
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError): os.environ['EDM_HOST'] = userdata.get('EDM_HOST')
+    with suppress(SecretNotFoundError): os.environ['EDM_USER'] = userdata.get('EDM_USER')
+    with suppress(SecretNotFoundError): os.environ['EDM_PASSWORD'] = userdata.get('EDM_PASSWORD')
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
 
-get_ipython().run_line_magic('load_ext', 'sql')
-get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
-get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
-get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if 'EDM_HOST' not in os.environ: os.environ['EDM_HOST'] = input('EDM server address: ').strip()
+if 'EDM_USER' not in os.environ: os.environ['EDM_USER'] = input('EDM username: ')
 
-# Delete the credential variables for security purposes.
+# psycopg2/libpq automatically read the PG* environment variables, so map the shared EDM_* names onto them.
+# (The password is only mapped if provided via `.env`/Colab; otherwise libpq falls back to `~/.pgpass`.)
+os.environ['PGHOST'] = os.environ['EDM_HOST']
+os.environ['PGUSER'] = os.environ['EDM_USER']
+os.environ.setdefault('PGDATABASE', 'edm')
+if 'EDM_PASSWORD' in os.environ: os.environ['PGPASSWORD'] = os.environ['EDM_PASSWORD']
 
-del edm_name, edm_password
+print('Verifying SQLAPI connection parameters/credentials with connection attempt')
+
+try:
+    # Test database connection
+    conn = psycopg2.connect('')
+    conn.close()
+    print('✅ SQLAPI connection parameters/credentials verified')
+except psycopg2.OperationalError:
+    print('⚠️ SQLAPI credentials check failed (assume missing/incorrect password, but double-check `.env` / secrets!)')
+    # Prompt user securely for password
+    os.environ['PGPASSWORD'] = getpass.getpass('Enter EDM Password manually: ')
+
+# Keeps `%sql` result tables rendering correctly on newer versions of prettytable
+import prettytable
+if 'DEFAULT' not in vars(prettytable): prettytable.DEFAULT = prettytable.TableStyle.DEFAULT
+
+# Load the SQL extension and connect
+get_ipython().run_line_magic('reload_ext', 'sql')
+get_ipython().run_line_magic('sql', 'postgresql://')
 
 
 # ##### Custom Functions
@@ -152,26 +189,50 @@ def calc_number_of_evs(df, ev_power):
 
 # ---
 
-# ## Use Case - Transformer Capacity Analysis for EV Chargers
-
 # #### Input Parameters
-# Input the grid name to find all the HV/MV transformers in this grid. 
 
 # In[ ]:
 
 
-# User input for the grid.
-grid_id = input("Enter grid ID: ")  # awefice
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+grid_id = None  # Target grid identifier (e.g., 'awefice')
+grid_element_id = None  # Target transformer ID (e.g., 'transformer_6')
+ev_max_power = None  # User input for EV Power (e.g., 15)
+
+
+# ## Use Case - Transformer Capacity Analysis for EV Chargers
+
+# Input the grid name to find all the HV/MV transformers in this grid.
+
+# In[ ]:
+
+
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_id = grid_id or input("Enter grid ID: ").strip()  # awefice
+
+# Define the grid_id time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in grid_id), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{grid_id}'.")
 
 
 # ### Data
 # #### Transformers Information
 # Fetch transformers and display the relevant information.
 
-# In[5]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'transformers <<', "\nSELECT grid_element_id,\n    meta ->> 'ownership' as ownership,\n    meta ->> 'rating_kva' as rating_kva,\n    meta ->> 'voltage_level' as voltage_level,\n    meta ->> 'commission_date' as commission_date,\n    meta ->> 'primary_voltage' as primary_voltage,\n    meta ->> 'secondary_voltage' as secondary_voltage,\n    phases\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Transformer'\n    AND meta ->> 'voltage_level' = 'HV/MV';\n")
+get_ipython().run_cell_magic('sql', 'transformers <<', "\nSELECT grid_element_id,\n    meta ->> 'ownership' as ownership,\n    meta ->> 'rating_kva' as rating_kva,\n    meta ->> 'voltage_level' as voltage_level,\n    meta ->> 'commission_date' as commission_date,\n    meta ->> 'primary_voltage' as primary_voltage,\n    meta ->> 'secondary_voltage' as secondary_voltage,\n    phases\nFROM grid_element\nWHERE grid_id = :grid_id\n    AND type = 'Transformer'\n    AND meta ->> 'voltage_level' = 'HV/MV';\n")
 
 
 # In[ ]:
@@ -190,25 +251,28 @@ else:
     )
 
 
-# Choose a transformer from the above list.
+# Choose a transformer from the list above.
 
 # In[ ]:
 
 
-# User input for the transformer.
-grid_element_id = input("Enter transformer ID: ")  # transformer_6
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_element_id = (
+    grid_element_id or input("Enter grid element ID: ").strip()
+)  # transformer_6
 
 
 # #### Meter Information
 # Fetch and display the meters downstream of the transformer.
 
-# In[8]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT grid_element_id,\n    type\nFROM grid_get_downstream('{grid_id}', '{grid_element_id}', 'false')\nWHERE type = 'Meter';\n")
+get_ipython().run_cell_magic('sql', 'meters <<', "\nSELECT grid_element_id,\n    type\nFROM grid_get_downstream(:grid_id, :grid_element_id, 'false')\nWHERE type = 'Meter';\n")
 
 
-# In[9]:
+# In[ ]:
 
 
 # Convert the results to a data frame.
@@ -229,7 +293,7 @@ else:
 # In[ ]:
 
 
-result = get_ipython().run_line_magic('sql', 'WITH last_year AS (                  SELECT TSTZRANGE(NOW() - INTERVAL \'1 year\', NOW()) AS time_range                ),                transformers as (                  SELECT grid_id, grid_element_id AS transformer_id                    FROM grid_element                   WHERE type = \'Transformer\'                    AND grid_id = \'{grid_id}\'                    AND meta->>\'voltage_level\' = \'HV/MV\'                    AND grid_element_id = \'{grid_element_id}\'                ),                transformer_meter AS (                  SELECT t.grid_id, t.transformer_id, ggd.grid_element_id AS meter_id                    FROM transformers t                    JOIN grid_get_downstream(t.grid_id, t.transformer_id, false) ggd                      ON true                   WHERE ggd.type = \'Meter\'                ),                meter_consumer_sources AS (                  SELECT geds_c.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_c                    JOIN transformer_meter tm                      ON geds_c.grid_id = geds_c.grid_id                     AND geds_c.grid_element_id = tm.meter_id                   WHERE geds_c.type = \'CONSUMER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_producer_sources AS (                  SELECT geds_p.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_p                    JOIN transformer_meter tm                      ON geds_p.grid_id = geds_p.grid_id                     AND geds_p.grid_element_id = tm.meter_id                   WHERE geds_p.type = \'PRODUCER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_consumption AS (                  SELECT mcs.transformer_id, mcs.meter_id, tdss_c.value, tdss_c.timestamp                    FROM meter_consumer_sources mcs                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcs.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_c                      ON true                ),                meter_production AS (                  SELECT mcp.transformer_id, mcp.meter_id, tdss_p.value, tdss_p.timestamp                    FROM meter_producer_sources mcp                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcp.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_p                      ON true                )                SELECT mc.transformer_id, mc.timestamp at time zone \'America/Vancouver\' as timestamp,                       SUM (mc.value - COALESCE(mp.value, 0)) as "total_kW"                  FROM meter_consumption mc                  LEFT JOIN meter_production mp                    ON mc.transformer_id = mp.transformer_id                   AND mc.meter_id = mp.meter_id                   AND mc.timestamp = mp.timestamp                 GROUP BY mc.transformer_id, mc.timestamp                ;')
+result = get_ipython().run_line_magic('sql', 'WITH last_year AS (                  SELECT TSTZRANGE(NOW() - INTERVAL \'1 year\', NOW()) AS time_range                ),                transformers as (                  SELECT grid_id, grid_element_id AS transformer_id                    FROM grid_element                   WHERE type = \'Transformer\'                    AND grid_id = :grid_id                    AND meta->>\'voltage_level\' = \'HV/MV\'                    AND grid_element_id = :grid_element_id                ),                transformer_meter AS (                  SELECT t.grid_id, t.transformer_id, ggd.grid_element_id AS meter_id                    FROM transformers t                    JOIN grid_get_downstream(t.grid_id, t.transformer_id, false) ggd                      ON true                   WHERE ggd.type = \'Meter\'                ),                meter_consumer_sources AS (                  SELECT geds_c.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_c                    JOIN transformer_meter tm                      ON geds_c.grid_id = geds_c.grid_id                     AND geds_c.grid_element_id = tm.meter_id                   WHERE geds_c.type = \'CONSUMER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_producer_sources AS (                  SELECT geds_p.grid_element_data_source_id, tm.grid_id, tm.transformer_id, tm.meter_id                    FROM grid_element_data_source geds_p                    JOIN transformer_meter tm                      ON geds_p.grid_id = geds_p.grid_id                     AND geds_p.grid_element_id = tm.meter_id                   WHERE geds_p.type = \'PRODUCER\'                     AND \'kWh\' = ANY(metrics)                ),                meter_consumption AS (                  SELECT mcs.transformer_id, mcs.meter_id, tdss_c.value, tdss_c.timestamp                    FROM meter_consumer_sources mcs                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcs.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_c                      ON true                ),                meter_production AS (                  SELECT mcp.transformer_id, mcp.meter_id, tdss_p.value, tdss_p.timestamp                    FROM meter_producer_sources mcp                    JOIN last_year ly                      ON true                    JOIN ts_data_source_select(mcp.grid_element_data_source_id, \'kWh\', ly.time_range) tdss_p                      ON true                )                SELECT mc.transformer_id, mc.timestamp at time zone :time_zone as timestamp,                       SUM (mc.value - COALESCE(mp.value, 0)) as "total_kW"                  FROM meter_consumption mc                  LEFT JOIN meter_production mp                    ON mc.transformer_id = mp.transformer_id                   AND mc.meter_id = mp.meter_id                   AND mc.timestamp = mp.timestamp                 GROUP BY mc.transformer_id, mc.timestamp                ;')
 
 
 # Convert the results to a data frame.
@@ -267,11 +331,14 @@ plot_available_capacity(df_transformer_load)
 # In[ ]:
 
 
-# User input for EV Power.
-ev_max_power = input("Enter EV Charger Maximum Power (kW): ")  # 15
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+ev_max_power = (
+    ev_max_power or input("Enter EV Charger Maximum Power (kW): ").strip()
+)  # 15
 
 
-# In[13]:
+# In[ ]:
 
 
 df_transformer_load = calc_number_of_evs(df_transformer_load, ev_max_power)

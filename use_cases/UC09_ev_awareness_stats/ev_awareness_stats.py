@@ -19,15 +19,17 @@
 
 # # Setup
 
-# In[1]:
+# In[ ]:
 
 
 import getpass
-import urllib.parse
 import pandas as pd
 import plotly.express as px
 import numpy as np
 import datetime
+import os
+import psycopg2
+from dotenv import load_dotenv
 
 
 # ## Conection
@@ -35,30 +37,78 @@ import datetime
 # In[ ]:
 
 
-edm_address = getpass.getpass(prompt="EDM server address: ")
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-print("\nEDM login information")
-edm_name = getpass.getpass(prompt="Username: ")
-edm_password = getpass.getpass(prompt="Password: ")
-edm_password = urllib.parse.quote(edm_password)
+if IN_COLAB:
+    from contextlib import suppress
+    print('☁️ Running in Google Colab. Using Colab Secrets for SQLAPI connection')
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError): os.environ['EDM_HOST'] = userdata.get('EDM_HOST')
+    with suppress(SecretNotFoundError): os.environ['EDM_USER'] = userdata.get('EDM_USER')
+    with suppress(SecretNotFoundError): os.environ['EDM_PASSWORD'] = userdata.get('EDM_PASSWORD')
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
 
-get_ipython().run_line_magic("load_ext", "sql")
-get_ipython().run_line_magic(
-    "sql", "postgresql://$edm_name:$edm_password@$edm_address/edm"
-)
-get_ipython().run_line_magic("config", "SqlMagic.displaycon = False")
-get_ipython().run_line_magic("config", "SqlMagic.feedback = False")
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if 'EDM_HOST' not in os.environ: os.environ['EDM_HOST'] = input('EDM server address: ').strip()
+if 'EDM_USER' not in os.environ: os.environ['EDM_USER'] = input('EDM username: ')
 
-# Delete the credential variables for security purposes.
+# psycopg2/libpq automatically read the PG* environment variables, so map the shared EDM_* names onto them.
+# (The password is only mapped if provided via `.env`/Colab; otherwise libpq falls back to `~/.pgpass`.)
+os.environ['PGHOST'] = os.environ['EDM_HOST']
+os.environ['PGUSER'] = os.environ['EDM_USER']
+os.environ.setdefault('PGDATABASE', 'edm')
+if 'EDM_PASSWORD' in os.environ: os.environ['PGPASSWORD'] = os.environ['EDM_PASSWORD']
 
-del edm_name, edm_password
+print('Verifying SQLAPI connection parameters/credentials with connection attempt')
+
+try:
+    # Test database connection
+    conn = psycopg2.connect('')
+    conn.close()
+    print('✅ SQLAPI connection parameters/credentials verified')
+except psycopg2.OperationalError:
+    print('⚠️ SQLAPI credentials check failed (assume missing/incorrect password, but double-check `.env` / secrets!)')
+    # Prompt user securely for password
+    os.environ['PGPASSWORD'] = getpass.getpass('Enter EDM Password manually: ')
+
+# Keeps `%sql` result tables rendering correctly on newer versions of prettytable
+import prettytable
+if 'DEFAULT' not in vars(prettytable): prettytable.DEFAULT = prettytable.TableStyle.DEFAULT
+
+# Load the SQL extension and connect
+get_ipython().run_line_magic('reload_ext', 'sql')
+get_ipython().run_line_magic('sql', 'postgresql://')
+
+
+# #### Input Parameters
+
+# In[ ]:
+
+
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+current_grid = None  # Target grid identifier (e.g., 'awefice')
+evch_id_1 = None  # User input for EV Charger (e.g., evch_10)
+evch_id_2 = None  # User input for EV Charger (e.g., evch_3)
+evch_id_3 = None  # User input for EV Charger (e.g., evch_20)
 
 
 # ## Data checks
 
 # #### Checking the awefice grid is present
 
-# In[3]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic('sql', '', '\nSELECT * FROM grid;\n')
@@ -67,33 +117,45 @@ get_ipython().run_cell_magic('sql', '', '\nSELECT * FROM grid;\n')
 # In[ ]:
 
 
-current_grid = "awefice"
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+current_grid = current_grid or input("Enter grid ID: ").strip()  # awefice
+
+# Define the grid_id time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in current_grid), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{current_grid}'.")
 
 
 # #### Looking up the EV Chargers in this grid.
 
-# In[5]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source geds, grid_element ge\nWHERE ge.grid_element_id = geds.grid_element_id\nAND ge.grid_id = '{current_grid}'\nAND ge.type = 'EVCharger';\n")
+get_ipython().run_cell_magic('sql', '', "\nSELECT *\nFROM grid_element_data_source geds, grid_element ge\nWHERE ge.grid_element_id = geds.grid_element_id\nAND ge.grid_id = :current_grid\nAND ge.type = 'EVCharger';\n")
 
 
 # # Data Retrieval
 
-# In[6]:
+# In[ ]:
 
 
 # Defining Data Retrieval Function.
 
 def _get_hourly_kwh_query(view_name, time_range):
-    result = get_ipython().run_line_magic('sql', 'SELECT ge_sources.grid_element_id,              date_trunc(\'hour\', timestamp) at time zone \'America/Vancouver\' as date_hour,              round(sum(value)::numeric, 2) AS "kWh",              ge_sources.type          FROM {view_name} ge_sources          JOIN ts_data_source_select(ge_sources.grid_element_data_source_id, \'kWh\', {time_range}) tdss ON true          GROUP BY ge_sources.grid_element_id, date_hour, ge_sources.type;')
+    result = get_ipython().run_line_magic('sql', 'SELECT ge_sources.grid_element_id,              date_trunc(\'hour\', timestamp) at time zone :time_zone as date_hour,              round(sum(value)::numeric, 2) AS "kWh",              ge_sources.type          FROM {view_name} ge_sources          JOIN ts_data_source_select(ge_sources.grid_element_data_source_id, \'kWh\', {time_range}) tdss ON true          GROUP BY ge_sources.grid_element_id, date_hour, ge_sources.type;')
     return result
 
 def get_hourly_kwh(view_name: str, min_date: datetime.datetime=None, max_date: datetime.datetime=None,
                    chunk_duration: datetime.timedelta=None):
     """
     Retrieves the consumption (kWh) time series for grid elements as given by a view, aggregated per hour,
-        converted from UTC to Vancouver timezone, and returns the final output as a dataframe.
+        converted from UTC to the grid's local time zone, and returns the final output as a dataframe.
     view_name must define a view of a subset of the grid_element_data_source table
     with grid_element_id, grid_element_data_source_id, valid (tstzrange), type columns
 
@@ -132,10 +194,10 @@ def get_hourly_kwh(view_name: str, min_date: datetime.datetime=None, max_date: d
 
 # ## Retrieving and summarizing EV Charger time series
 
-# In[7]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'CREATE OR REPLACE TEMPORARY VIEW ev_sources AS', "    SELECT geds.grid_element_id, geds.grid_element_data_source_id, geds.valid, geds.type\n    FROM grid_element ge\n    JOIN grid_element_data_source geds\n        ON ge.grid_id = geds.grid_id AND ge.grid_element_id = geds.grid_element_id\n    WHERE ge.grid_id = '{current_grid}' AND ge.type = 'EVCharger';\n")
+get_ipython().run_cell_magic('sql', 'CREATE OR REPLACE TEMPORARY VIEW ev_sources AS', "    SELECT geds.grid_element_id, geds.grid_element_data_source_id, geds.valid, geds.type\n    FROM grid_element ge\n    JOIN grid_element_data_source geds\n        ON ge.grid_id = geds.grid_id AND ge.grid_element_id = geds.grid_element_id\n    WHERE ge.grid_id = :current_grid AND ge.type = 'EVCharger';\n")
 
 
 # In[ ]:
@@ -147,17 +209,16 @@ get_ipython().run_cell_magic('sql', 'CREATE OR REPLACE TEMPORARY VIEW ev_sources
 from dateutil.relativedelta import relativedelta
 
 df_evch = get_hourly_kwh("ev_sources", chunk_duration=relativedelta(months=6))
-## For North Central Zone, may take 20 minutes or longer
 df_evch = df_evch.rename(columns={"grid_element_id": "evch_id"}, inplace=False)
 
 
-# In[9]:
+# In[ ]:
 
 
 df_evch.head()
 
 
-# In[10]:
+# In[ ]:
 
 
 # Summary stats for EV Chargers.
@@ -166,10 +227,10 @@ df_evch.describe()
 
 # ## Retrieving and summarizing the Meter time series
 
-# In[11]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'CREATE OR REPLACE TEMPORARY VIEW meter_sources AS', "    SELECT ge.grid_element_id AS evch_id, geds.grid_element_id,\n        geds.grid_element_data_source_id, geds.valid, geds.type\n    FROM grid_element ge\n    JOIN grid_get_sources('{current_grid}', ge.grid_element_id, True) upstream_elements ON True\n    JOIN grid_element_data_source geds\n        ON ge.grid_id = geds.grid_id AND upstream_elements.grid_element_id = geds.grid_element_id\n    WHERE ge.grid_id = '{current_grid}'\n        AND ge.type='EVCharger' AND upstream_elements.type = 'Meter';\n")
+get_ipython().run_cell_magic('sql', 'CREATE OR REPLACE TEMPORARY VIEW meter_sources AS', "    SELECT ge.grid_element_id AS evch_id, geds.grid_element_id,\n        geds.grid_element_data_source_id, geds.valid, geds.type\n    FROM grid_element ge\n    JOIN grid_get_sources(:current_grid, ge.grid_element_id, True) upstream_elements ON True\n    JOIN grid_element_data_source geds\n        ON ge.grid_id = geds.grid_id AND upstream_elements.grid_element_id = geds.grid_element_id\n    WHERE ge.grid_id = :current_grid\n        AND ge.type='EVCharger' AND upstream_elements.type = 'Meter';\n")
 
 
 # In[ ]:
@@ -181,13 +242,13 @@ df_meter = get_hourly_kwh("meter_sources")
 df_meter = df_meter.rename(columns={"grid_element_id": "meter_id"}, inplace=False)
 
 
-# In[13]:
+# In[ ]:
 
 
 df_meter.head()
 
 
-# In[14]:
+# In[ ]:
 
 
 # Summary stats for Meters.
@@ -219,11 +280,11 @@ df_meter_split.head()
 df_meter_split.groupby(["meter_id"]).count()
 
 
-# In[17]:
+# In[ ]:
 
 
 # Replace Nan values with 0.
-df_meter_split.replace(np.nan, 0, inplace=True)
+df_meter_split = df_meter_split.replace(np.nan, 0)
 df_meter_split.head()
 
 
@@ -235,7 +296,7 @@ df_meter_split["NET"] = df_meter_split["CONSUMER"] - df_meter_split["PRODUCER"]
 df_meter_split.head()
 
 
-# In[19]:
+# In[ ]:
 
 
 # Summary stats of Meter data.
@@ -244,13 +305,13 @@ df_meter_split.describe()
 
 # #### Retrieve the EV Charger to Meter correspondence from the DB:
 
-# In[20]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic('sql', 'evchs_meter <<', '\nSELECT DISTINCT evch_id, grid_element_id as meter_id\n    FROM meter_sources;\n')
 
 
-# In[21]:
+# In[ ]:
 
 
 # Convert to data frame for later use.
@@ -284,7 +345,7 @@ print(df_evch["date_hour"].max())
 
 
 # Compute the sum of EV Charger consumption from all the EV Chargers corresponding to each Meter.
-meter_evch_kwh_portion = df_evch_m.groupby("meter_id").sum("kWh").reset_index()
+meter_evch_kwh_portion = df_evch_m.groupby("meter_id").sum(numeric_only=True).reset_index()
 meter_evch_kwh_portion
 
 
@@ -387,7 +448,7 @@ def sum_loads(df, groupby_list, sum_list):
     """
 
     df_final = (
-        df.groupby(groupby_list).sum(sum_list, min_count=1).reset_index()
+        df.groupby(groupby_list)[sum_list].sum(min_count=1).reset_index()
     )  # min_count=1 keeps null as null in summation.
 
     return df_final
@@ -520,7 +581,7 @@ def enrich_data_for_plotting(df_evch):
     return df_all
 
 
-# In[35]:
+# In[ ]:
 
 
 # Enrich EV Charger data with hour-of-day/day-of-week/month information.
@@ -543,12 +604,8 @@ def prep_data_for_overlaid_line_chart(df_evch_enh_agg, column, line_length):
     df = df_evch_enh_agg.copy()
 
     # Order properly to then be able to remove first&last partial weeks.
-    df.sort_values(
-        ["year_week", "evch_id", column],
-        ascending=True,
-        inplace=True,
-        ignore_index=True,
-    )
+    df = df.sort_values(["year_week", "evch_id", column],
+        ascending=True, ignore_index=True)
 
     # find portion of first week (if it doesn't start on Monday)
     first_0 = next(idx for idx, val in enumerate(df[column], 1) if val == 0) - 1
@@ -562,12 +619,8 @@ def prep_data_for_overlaid_line_chart(df_evch_enh_agg, column, line_length):
     df = df.iloc[first_0 : (last_6 + 1),].reset_index(drop=True)
 
     # Re-sort by evch_id first
-    df.sort_values(
-        ["evch_id", "year_week", column],
-        ascending=True,
-        inplace=True,
-        ignore_index=True,
-    )
+    df = df.sort_values(["evch_id", "year_week", column],
+        ascending=True, ignore_index=True)
 
     # Get the distinct evch_ids.
     evch_ids = df["evch_id"].unique()
@@ -584,7 +637,7 @@ def prep_data_for_overlaid_line_chart(df_evch_enh_agg, column, line_length):
         evch_id_val, count = evch_ids_and_counts.iloc[i, :]
         n_weeks = count // line_length
         break_rows = pd.DataFrame(
-            {"hour": np.NaN, "kWh": None, "evch_id": evch_id_val, "year_week": None},
+            {"hour": np.nan, "kWh": None, "evch_id": evch_id_val, "year_week": None},
             index=[idx + line_length * (i + 1) - 0.5 for i in range(n_weeks)],
         )
         break_rows = break_rows.dropna(axis=1, how="all")
@@ -637,7 +690,7 @@ def plot_evch_daily_load_vs_dow(df_all, evch_id, chart_type):
     # Plot appropriate chart based on the chart type specified.
     if chart_type == "box":
         # Order by numeric days of the week to order the plot properly.
-        df.sort_values("day_n", ascending=True, inplace=True)
+        df = df.sort_values("day_n", ascending=True)
         # Plot.
         fig = px.box(
             df,
@@ -682,7 +735,14 @@ plot_evch_daily_load_vs_dow(df_evch_enh, evch_id="all", chart_type="box")
 # In[ ]:
 
 
-evch_id = input("Enter evch_id to plot individual EVCharger: ")
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+evch_id = evch_id_1 or input("Enter evch_id to plot individual EVCharger: ").strip()
+
+
+# In[ ]:
+
+
 plot_evch_daily_load_vs_dow(df_evch_enh, evch_id, chart_type="line")
 plot_evch_daily_load_vs_dow(df_evch_enh, evch_id, chart_type="box")
 
@@ -724,7 +784,7 @@ def plot_evch_hourly_load_vs_hod(df_all, evch_id, chart_type):
     # Plot appropriate chart based on the chart type specified.
     if chart_type == "box":
         # Order by numeric days of the week to order the plot properly.
-        df.sort_values("hour", ascending=True, inplace=True)
+        df = df.sort_values("hour", ascending=True)
 
         fig = px.box(
             df,
@@ -769,7 +829,14 @@ plot_evch_hourly_load_vs_hod(df_evch_enh, evch_id="all", chart_type="box")
 # In[ ]:
 
 
-evch_id = input("Enter evch_id to plot individual EVCharger: ")
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+evch_id = evch_id_2 or input("Enter evch_id to plot individual EVCharger: ").strip()
+
+
+# In[ ]:
+
+
 plot_evch_hourly_load_vs_hod(df_evch_enh, evch_id, chart_type="line")
 plot_evch_hourly_load_vs_hod(df_evch_enh, evch_id, chart_type="box")
 
@@ -809,7 +876,7 @@ def plot_evch_daily_load_vs_moy(df_all, evch_id):
         df = df_agg[df_agg["evch_id"] == evch_id].copy()
 
     # Order by numeric days of the week to order the plot properly.
-    df.sort_values("month_n", ascending=True, inplace=True)
+    df = df.sort_values("month_n", ascending=True)
 
     # Plot.
     fig = px.box(
@@ -835,6 +902,13 @@ plot_evch_daily_load_vs_moy(df_evch_enh, evch_id="all")
 # In[ ]:
 
 
-evch_id = input("Enter evch_id to plot individual EVCharger: ")
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+evch_id = evch_id_3 or input("Enter evch_id to plot individual EVCharger: ").strip()
+
+
+# In[ ]:
+
+
 plot_evch_daily_load_vs_moy(df_evch_enh, evch_id)
 

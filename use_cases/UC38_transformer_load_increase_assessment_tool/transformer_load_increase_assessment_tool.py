@@ -24,13 +24,14 @@
 
 # ## Setup 
 
-# In[1]:
+# In[ ]:
 
 
 from datetime import datetime
-import getpass
 from io import StringIO
-
+import os
+from dotenv import load_dotenv
+import getpass
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -49,40 +50,55 @@ pd.set_option("display.max_columns", None)
 # In[ ]:
 
 
-# Enter the REST server origin or hostname (optionally without "https://")
-server_hostname = getpass.getpass(prompt="REST server address: ")
-# Ensure that the server address does not specify plaintext HTTP
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+if IN_COLAB:
+    from contextlib import suppress
+
+    print("☁️ Running in Google Colab. Using Colab Secrets for REST API connection")
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError):
+        os.environ["EDM_HOST"] = userdata.get("EDM_HOST")
+    with suppress(SecretNotFoundError):
+        os.environ["EDM_USER"] = userdata.get("EDM_USER")
+    with suppress(SecretNotFoundError):
+        os.environ["EDM_PASSWORD"] = userdata.get("EDM_PASSWORD")
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
+
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if "EDM_HOST" not in os.environ:
+    os.environ["EDM_HOST"] = input("EDM server address: ").strip()
+if "EDM_USER" not in os.environ:
+    os.environ["EDM_USER"] = input("EDM username: ")
+if "EDM_PASSWORD" not in os.environ:
+    os.environ["EDM_PASSWORD"] = getpass.getpass("EDM password: ")
+
+# Ensure that the server address does not specify plaintext HTTP, then build the HTTPS server origin.
+server_hostname = os.environ["EDM_HOST"]
 assert (
     server_hostname.startswith("http://") == False
 ), "Server address uses https:// for secure communications, not http://"
-
-# Support the case where the specified address already included `https://`, otherwise add it
 if server_hostname.startswith("https://"):
     server_origin = server_hostname
 else:
     server_origin = f"https://{server_hostname}"
 
-
-# In[ ]:
-
-
-# Enter the username that you use to log into the server
-server_user_name = getpass.getpass(prompt="Username: ")
-
-
-# In[ ]:
-
-
-# Enter the password that you use to log into the server
-server_password = getpass.getpass(prompt="Password: ")
-
-
-# In[5]:
-
-
 # This auth tuple can be passed to `requests` functions as the `auth` argument.
 # (An HTTP Basic Authentication header will be generated and used automatically)
-auth = (server_user_name, server_password)
+auth = (os.environ["EDM_USER"], os.environ["EDM_PASSWORD"])
+response = requests.get(f"{server_origin}/api/v1/grid", auth=auth, timeout=30)
+response.raise_for_status()
+print("✅ REST API connection parameters/credentials verified")
 
 
 # ---
@@ -92,42 +108,53 @@ auth = (server_user_name, server_password)
 # #### Input Parameters
 # Input the grid name, the meter_id, and the future additional load. 
 
-# In[6]:
+# In[ ]:
 
 
-# User input for the grid.
-grid_id = input("Enter grid ID: ")  # e.g. North Central Zone
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+grid_id = None  # Target grid identifier (e.g., 'GSO_4')
+meter_id = None  # Target meter ID (e.g., 'm_21117_21')
+additional_load = None  # Additional load (e.g., 6.0)
+start = None  # Time series range start (e.g., '2024-01-01 00:00:00')
+end = None  # Time series range end (e.g., '2024-12-31 23:00:00')
 
 
-# In[7]:
+# In[ ]:
 
 
-# Define the grid_id time zone.
-if grid_id == "awefice":
-    time_zone = "America/Vancouver"
-elif grid_id == "North Central Zone":
-    time_zone = "America/New_York"
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_id = grid_id or input("Enter grid ID: ").strip()  # GSO_4
+meter_id = meter_id or input("Enter meter ID: ").strip()  # # e.g., 'm_21117_21'
+additional_load = (
+    additional_load or input("Enter required load in kW: ").strip()
+)  # e.g. 6.0
+start = start or input("Enter start date (local time): ").strip()  # 2024-01-01 00:00:00
+end = end or input("Enter end date (local time): ").strip()  # 2024-12-31 23:00:00
 
 
-# In[8]:
+# In[ ]:
 
 
-# User input for the meter.
-meter_id = input("Enter meter ID: ")  # e.g. 13Y68ZB or 16A3Y52-1
-
-
-# In[9]:
-
-
-# Additional load required by a customer in kW.
-additional_load = input("Enter required load in kW: ")  # e.g. 6.0
+# Define the grid_id time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in grid_id), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{grid_id}'.")
 
 
 # In[ ]:
 
 
 # Define the start and end dates for the analysis and convert them to UTC using the appropriate format.
-local_start_and_end_dates = ["2023-01-01 00:00:00", "2023-12-31 23:00:00"]
+local_start_and_end_dates = [start, end]
 
 converted_dates = []
 
@@ -146,7 +173,7 @@ print(converted_dates)
 # ### Data
 # #### Transformers Information
 
-# In[11]:
+# In[ ]:
 
 
 # Use the tracing endpoint to find the transformer above the `meter_id`.
@@ -238,12 +265,12 @@ transformer_aggregate_ts = (
 
 # Convert kWh to kW (Energy to power). Since the energy data is hourly, converting it to average hourly power means dividing the energy values by 1.
 transformer_aggregate_ts["power_kW"] = transformer_aggregate_ts["total_kWh"] / 1
-transformer_aggregate_ts.drop(columns=["total_kWh"], inplace=True)
+transformer_aggregate_ts = transformer_aggregate_ts.drop(columns=["total_kWh"])
 
 transformer_aggregate_ts
 
 
-# In[15]:
+# In[ ]:
 
 
 # Add a column with the transformer's ID.
@@ -284,7 +311,7 @@ transformer_aggregate_ts.head()
 # 
 # By examining the distribution of the expected load, we can gain further insights into whether exceeding the transformer’s capacity is more likely to occur during certain hours of the day or certain months of the year. This is particularly relevant if the additional load is from an EV charger or a heat pump, where it may be concentrated at specific times.
 
-# In[16]:
+# In[ ]:
 
 
 # Find the date when maximum load occurs.
@@ -337,7 +364,7 @@ fig.update_xaxes(dtick=1)
 fig.show()
 
 
-# In[18]:
+# In[ ]:
 
 
 # Plot the distribution of the expected load with respect to the hours of the day and the months of the year.

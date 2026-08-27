@@ -25,9 +25,9 @@
 #     * Establish a connection to EDM using SQL API and define functions to be used by the rest of the notebook.
 # 
 # 
-# * Section 1: EV Growth and Load Forecasting For the Entire Grid
+# * Section 1: EV Growth and Load Forecasting For the Entire Distribution Service Area
 # 
-#     * Display the breakdown of meters by consumer type for the entire grid.
+#     * Display the breakdown of meters by consumer type for the entire distribution service area.
 #     * Forecast the growth in the number of residential EVs (based on the current number of EV Chargers behind residential meters and various growth assumptions).
 #     * Forecast the load resulting from the increased residential EV counts.
 # 
@@ -61,12 +61,14 @@
 
 # ## Setup
 
-# In[1]:
+# In[ ]:
 
 
 # Import libraries
 import getpass
-import urllib.parse
+import os
+from dotenv import load_dotenv
+import psycopg2
 import plotly.express as px
 import pandas as pd
 import numpy as np
@@ -91,24 +93,59 @@ level_2_power_kW = 7.2  # kW
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com.
 # <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[3]:
+# In[ ]:
 
 
-# Connect to server
-edm_address = getpass.getpass(prompt='EDM server address: ')
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-print('\nEDM login information')
-edm_name = getpass.getpass(prompt='Username: ')
-edm_password = getpass.getpass(prompt='Password: ')
-edm_password = urllib.parse.quote(edm_password)
+if IN_COLAB:
+    from contextlib import suppress
+    print('☁️ Running in Google Colab. Using Colab Secrets for SQLAPI connection')
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError): os.environ['EDM_HOST'] = userdata.get('EDM_HOST')
+    with suppress(SecretNotFoundError): os.environ['EDM_USER'] = userdata.get('EDM_USER')
+    with suppress(SecretNotFoundError): os.environ['EDM_PASSWORD'] = userdata.get('EDM_PASSWORD')
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
 
-get_ipython().run_line_magic('load_ext', 'sql')
-get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
-get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
-get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if 'EDM_HOST' not in os.environ: os.environ['EDM_HOST'] = input('EDM server address: ').strip()
+if 'EDM_USER' not in os.environ: os.environ['EDM_USER'] = input('EDM username: ')
 
-# Delete the credential variables for security purposes.
-del edm_name, edm_password
+# psycopg2/libpq automatically read the PG* environment variables, so map the shared EDM_* names onto them.
+# (The password is only mapped if provided via `.env`/Colab; otherwise libpq falls back to `~/.pgpass`.)
+os.environ['PGHOST'] = os.environ['EDM_HOST']
+os.environ['PGUSER'] = os.environ['EDM_USER']
+os.environ.setdefault('PGDATABASE', 'edm')
+if 'EDM_PASSWORD' in os.environ: os.environ['PGPASSWORD'] = os.environ['EDM_PASSWORD']
+
+print('Verifying SQLAPI connection parameters/credentials with connection attempt')
+
+try:
+    # Test database connection
+    conn = psycopg2.connect('')
+    conn.close()
+    print('✅ SQLAPI connection parameters/credentials verified')
+except psycopg2.OperationalError:
+    print('⚠️ SQLAPI credentials check failed (assume missing/incorrect password, but double-check `.env` / secrets!)')
+    # Prompt user securely for password
+    os.environ['PGPASSWORD'] = getpass.getpass('Enter EDM Password manually: ')
+
+# Keeps `%sql` result tables rendering correctly on newer versions of prettytable
+import prettytable
+if 'DEFAULT' not in vars(prettytable): prettytable.DEFAULT = prettytable.TableStyle.DEFAULT
+
+# Load the SQL extension and connect
+get_ipython().run_line_magic('reload_ext', 'sql')
+get_ipython().run_line_magic('sql', 'postgresql://')
 
 
 # ### Custom Functions
@@ -218,7 +255,7 @@ def calculate_ev_increase(
     # Create DataFrame to store growth projections
     df_growth = pd.DataFrame(columns=["year"])
     df_growth["year"] = pd.DataFrame(
-        pd.date_range(start=start_year, end=end_year, freq="y").strftime("%Y"),
+        pd.date_range(start=start_year, end=end_year, freq="YE").strftime("%Y"),
         columns=["year"],
     )
 
@@ -253,10 +290,9 @@ def calculate_ev_increase(
         df_growth.exponential_ev_growth = df_growth.exponential_ev_growth.round(0)
 
         # Apply condition to restrict exponential growth values based on the number of meters and average number of vehicles per household
-        df_growth["exponential_ev_growth"].where(
+        df_growth["exponential_ev_growth"] = df_growth["exponential_ev_growth"].where(
             df_growth["exponential_ev_growth"] < meters_count * average_vehicles,
             other=math.floor(meters_count * average_vehicles),
-            inplace=True,
         )
 
         # Concatenate the growth projections to the result DataFrame
@@ -459,11 +495,12 @@ def calculate_year_capacity_exceeded(
 
         # Determine the year when the load exceeds the total available capacity.
         # Total available capacity is calculated by subtracting the maximum load (consumption/1 hour) from the total capacity.
+        # Note: This calculation will work only if the consumption and generation data is hourly.
         df_forecast_year.at[0, "grid_element_id"] = grid_element_id
         df_forecast_year.at[0, calc_load_col_name] = df_feeder_ev.loc[
             (
                 df_feeder_ev["exponential_load"]
-                >= (row["total_capacity_kW"] - row["max_kWh"] / 1)
+                >= (row["total_capacity_kW"] - row["max_kWh"] / 1) 
             )
             & (df_feeder_ev["growth_rate"] == yearly_growth_rate)
         ]["year"].min()
@@ -477,17 +514,8 @@ def calculate_year_capacity_exceeded(
 
 # ---
 
-# ## Section 1: EV Growth and Load Forecasting For the *Entire Grid*
+# ## Section 1: EV Growth and Load Forecasting For the *Entire Distribution Service Area*
 # ### Display Meter Count by Consumer Type
-
-# #### Input Parameters
-# Enter the grid ID of interest.
-
-# In[ ]:
-
-
-grid_id = input("Enter grid ID: ")  # North Central Zone
-
 
 # #### Meter Count by Consumer Type
 
@@ -499,13 +527,11 @@ meters_query = """
     SELECT COUNT(grid_element_id) as number_of_meters,
         meta->> 'type_of_consumer' as consumer_type
     FROM grid_element
-    WHERE grid_id = '{}'
-        AND type = 'Meter'
+    WHERE type = 'Meter'
     GROUP  BY (meta->> 'type_of_consumer')
     ORDER BY number_of_meters desc;
     """
-formatted_query = meters_query.format(grid_id)
-meters = get_ipython().run_line_magic('sql', '$formatted_query')
+meters = get_ipython().run_line_magic('sql', '$meters_query')
 
 # Convert the results to a data frame and plot.
 df_meters = meters.DataFrame()
@@ -533,7 +559,7 @@ fig.update_traces(
 fig.show()
 
 
-# ### Residential EV *Count* - Growth Forecasting For the Entire Grid
+# ### Residential EV *Count* - Growth Forecasting For the Entire Distribution Service Area
 
 # In[ ]:
 
@@ -542,29 +568,27 @@ fig.show()
 meters_query = """
     SELECT COUNT(ge.grid_element_id)::float as number_of_evs
     FROM grid_element ge
-    JOIN grid_get_sources('{}', ge.grid_element_id, 'true') ggs
-    ON true
-    WHERE ge.grid_id = '{}'
-        AND ge.type = 'EVCharger'
+    JOIN grid_get_sources(ge.grid_id, ge.grid_element_id, 'true') ggs
+        ON true
+    WHERE ge.type = 'EVCharger'
         AND ggs.meta->> 'type_of_consumer' IN ('residential')
         AND ggs.type = 'Meter';
     """
-formatted_query = meters_query.format(grid_id, grid_id)
-current_ev_chargers_count_entire_grid = get_ipython().run_line_magic('sql', '$formatted_query')
-current_ev_chargers_count_entire_grid = current_ev_chargers_count_entire_grid[0][0]
-print('The current number of residential EV Chargers is {}'.format(current_ev_chargers_count_entire_grid))
+current_ev_chargers_count_entire_area = get_ipython().run_line_magic('sql', '$meters_query')
+current_ev_chargers_count_entire_area = current_ev_chargers_count_entire_area[0][0]
+print('The current number of residential EV Chargers is {}'.format(int(current_ev_chargers_count_entire_area)))
 
 
 # <mark style="background-color: #FFFF00">  
-# Assuming potential yearly growth rates of EVs going from 20% to 50% in 1% increments, calculate the linear and compounded increase in EVs in the entire grid. </mark>
+# Assuming potential yearly growth rates of EVs going from 20% to 50% in 1% increments, calculate the linear and compounded increase in EVs in the entire distribution service area. </mark>
 # 
 
 # In[ ]:
 
 
 # Calculate the forecasted total number of EVs in the entire grid.
-df_grid = calculate_ev_increase(
-    current_ev_chargers_count_entire_grid,
+df_dist_area = calculate_ev_increase(
+    current_ev_chargers_count_entire_area,
     df_meters.loc[df_meters["consumer_type"] == "residential", "number_of_meters"][0],
     average_vehicles_per_household,
 )
@@ -574,32 +598,32 @@ df_grid = calculate_ev_increase(
 
 
 plot_ev_increase(
-    df_grid, title="Forecasting the Total Number of EVs in the {} grid".format(grid_id)
+    df_dist_area, title="Forecasting the Total Number of EVs in the Entire Distribution Service Area"
 )
 
 
-# ### Residential EV *Load* - Growth Forecasting for the Entire Grid
+# ### Residential EV *Load* - Growth Forecasting for the Entire Distribution Service Area
 
 # In[ ]:
 
 
 # Calculate the average daily load from additional EVs. All EVs are assumed to be charged using level 2 chargers.
-df_grid["linear_load_kW"] = (
-    df_grid["linear_ev_growth"] - current_ev_chargers_count_entire_grid
+df_dist_area["linear_load_kW"] = (
+    df_dist_area["linear_ev_growth"] - current_ev_chargers_count_entire_area
 ) * level_2_power_kW
-df_grid["exponential_load_kW"] = (
-    df_grid["exponential_ev_growth"] - current_ev_chargers_count_entire_grid
+df_dist_area["exponential_load_kW"] = (
+    df_dist_area["exponential_ev_growth"] - current_ev_chargers_count_entire_area
 ) * level_2_power_kW
-df_grid["period"] = "daily"
+df_dist_area["period"] = "daily"
 
 
 # In[ ]:
 
 
 plot_ev_load(
-    df_grid,
+    df_dist_area,
     available_capacity_kW=0,
-    title="Forecasting Increase of Average Daily Power from Additional EVs for the Entire Grid",
+    title="Forecasting Increase of Average Daily Power from Additional EVs for the Entire Distribution Service Area",
 )
 
 
@@ -611,51 +635,69 @@ plot_ev_load(
 # In[ ]:
 
 
-# Get all the feeders in the grid and the number of meters and EV Chargers in each feeder.
-feeders_query = """
-    WITH feeders_table_1 AS (
-    SELECT ge.grid_element_id,
-        COUNT(ggd.grid_element_id) as number_of_meters,
-        CAST(ge.meta->> 'rating_kva' AS float) as rating_kva
-    FROM grid_element ge
-    JOIN grid_get_downstream('{}', ge.grid_element_id, 'false') ggd
-    ON true
-    WHERE ge.is_producer and ge.type = 'Transformer'
-        AND ge.grid_id = '{}'
-        AND ggd.type = 'Meter'
-        AND ggd.meta->> 'type_of_consumer' = 'residential'
-    GROUP BY ge.grid_element_id, ge.meta
-    ),
-    feeders_table_2 AS (
-    SELECT ge.grid_element_id,
-        COALESCE(COUNT(ggd.grid_element_id), 0) as number_of_evchargers
-    FROM grid_element ge
-    JOIN grid_get_downstream('{}', ge.grid_element_id, 'false') ggd
-    ON true
-    WHERE ge.is_producer and ge.type = 'Transformer'
-        AND ge.grid_id = '{}'
-        AND ggd.type = 'EVCharger'
-    GROUP BY ge.grid_element_id
-    )
-    SELECT t1.grid_element_id, t1.number_of_meters, t1.rating_kva, t2.number_of_evchargers
-    FROM feeders_table_1 t1
-    LEFT JOIN feeders_table_2 t2
-        ON t2.grid_element_id = t1.grid_element_id
-    ORDER BY t1.grid_element_id;
+# Get all grid_ids in the system.
+grid_ids_query = """
+    SELECT DISTINCT grid_id
+    FROM grid
+    ORDER BY grid_id;
     """
-formatted_query = feeders_query.format(grid_id, grid_id, grid_id, grid_id)
-feeders = get_ipython().run_line_magic('sql', '$formatted_query')
+grid_ids_result = get_ipython().run_line_magic('sql', '$grid_ids_query')
+grid_ids = [row[0] for row in grid_ids_result]
+print('Found {} grids.'.format(len(grid_ids)))
 
-# Convert the results to a data frame and display it.
-df_feeders = feeders.DataFrame().fillna(0)
-df_feeders = df_feeders[['grid_element_id', 'number_of_meters', 'number_of_evchargers', 'rating_kva']]
+
+# In[ ]:
+
+
+# Iterate over all the feeders in the distribution service area and get the number of meters and EV Chargers in each feeder.
+feeders_query = """
+    WITH feeders AS (
+        SELECT grid_id, grid_element_id, CAST(meta->>'rating_kva' AS float) as rating_kva
+        FROM grid_element
+        WHERE is_producer AND type = 'CircuitBreaker'
+            AND grid_id = :grid_id
+    ),
+    counts AS (
+        SELECT f.grid_id, f.grid_element_id,
+            COUNT(*) FILTER (
+                WHERE ggd.type = 'Meter' AND ggd.meta->>'type_of_consumer' = 'residential'
+            ) as number_of_meters,
+            COUNT(*) FILTER (WHERE ggd.type = 'EVCharger') as number_of_evchargers
+        FROM feeders f
+        JOIN grid_get_downstream(f.grid_id, f.grid_element_id, 'false') ggd
+            ON true
+        GROUP BY f.grid_id, f.grid_element_id
+    )
+    SELECT f.grid_id, f.grid_element_id,
+        COALESCE(c.number_of_meters, 0) as number_of_meters,
+        COALESCE(c.number_of_evchargers, 0) as number_of_evchargers,
+        f.rating_kva
+    FROM feeders f
+    LEFT JOIN counts c
+        ON c.grid_id = f.grid_id AND c.grid_element_id = f.grid_element_id
+    ORDER BY f.grid_id, f.grid_element_id;
+    """
+
+all_feeders = []
+for grid_id in grid_ids:
+    result = get_ipython().run_line_magic('sql', '$feeders_query')
+
+    df = result.DataFrame().fillna(0)
+    all_feeders.append(df)
+
+    print('Grid {}'.format(grid_id))
+    print(df)
+    print('-' * 60)
+
+# Combine every grid's results into one data frame at the end.
+df_feeders = pd.concat(all_feeders, ignore_index=True) if all_feeders else pd.DataFrame()
 df_feeders
 
 
 # In[ ]:
 
 
-# Calculate the total capacity per feeder from the feeder-top transformers' rating_kva and display the results (top few).
+# Calculate the total capacity per transformer from each service transformer's rating_kva and display the results (top few).
 df_feeders["total_capacity_kW"] = df_feeders["rating_kva"].astype(int) * 0.98
 df_feeders.head()
 
@@ -663,7 +705,7 @@ df_feeders.head()
 # In[ ]:
 
 
-# Sort the feeders by the number of meters and display the results.
+# Sort the transformers by the number of meters and display the results.
 df_feeders_sorted = df_feeders.sort_values(by="number_of_meters")
 fig = px.scatter(
     df_feeders_sorted,
@@ -672,23 +714,48 @@ fig = px.scatter(
     size="number_of_meters",
     color="total_capacity_kW",
     title="Number of Meters in Each Feeder",
-    labels=dict(number_of_meters="Number of Meters", grid_element_id="Grid Element ID"),
+    labels=dict(number_of_meters="Number of Meters", grid_id="Grid ID/Feeder Name", grid_element_id="Grid Element ID"),
 )
-fig.update_xaxes(ticklabelstep=2)
+fig.update_xaxes(showticklabels=False)
 fig.show()
 
 
-# ### Select Feeder
+# ### Select Specific Feeder
 
 # In[ ]:
 
 
-# Choose a `grid_element_id` of a feeder-top element.
-grid_element_id = input("Enter a feeder name: ")
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+
+grid_id = None
+csv_path = None  # Path to csv file
+
+
+# In[ ]:
+
+
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_id = grid_id or input("Enter a Grid ID / Feeder ID (Name): ").strip()
+
 # For example:
-#'10407_hvmv' is a large feeder with 810 residential meters
-#'17128_hvmv' is a medium feeder with 112 residential meters
-#'39660_hvmv' is a small feeder with 64 residential meters
+#'GSO_4' is very large feeder with 1,424 residential meters
+#'SAF_58' is a large feeder with 737 residential meters
+#'GSO_10' is a medium feeder with 405 residential meters
+#'GSO_102' is a small feeder with 12 residential meters
+
+# Define the analysis time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in grid_id), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{grid_id}'.")
 
 
 # ### Aggregate the Existing Consumption for the Given Feeder
@@ -696,47 +763,45 @@ grid_element_id = input("Enter a feeder name: ")
 # In[ ]:
 
 
-# Fetch the consumption time series for all meters in the feeder (i.e. downstream of the feeder-top element),
-# aggregate them to obtain the feeder's existing aggregate net consumption and display the results (top view).
-# This query retrieves both consumption and production time series (usually from PVs) for each meter
-# and subtracts production from consumption to get the feeder net consumption.
 net_consumption_kWh = """
-    SELECT ge.grid_element_id as feeder_id,
-            tdss_c.timestamp at time zone 'AST' as timestamp,
+    SELECT ge.grid_id,
+            ge.grid_element_id as grid_element_id,
+            tdss_c.timestamp at time zone :time_zone as timestamp,
             SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as "net_consumption_kWh"
     FROM grid_element ge
-    JOIN grid_get_downstream('{}', ge.grid_element_id, 'false') ggd
+    JOIN grid_get_downstream(ge.grid_id, ge.grid_element_id, 'false') ggd
         ON ggd.grid_id = ge.grid_id
     JOIN grid_element_data_source geds_c
-        ON geds_c.grid_element_id = ggd.grid_element_id
+        ON geds_c.grid_id = ggd.grid_id
+        AND geds_c.grid_element_id = ggd.grid_element_id
         AND geds_c.type = 'CONSUMER'
     JOIN ts_data_source_select(geds_c.grid_element_data_source_id, 'kWh') tdss_c
         ON true
     LEFT JOIN grid_element_data_source geds_p
-        ON geds_p.grid_element_id = geds_c.grid_element_id
+        ON geds_p.grid_id = geds_c.grid_id
+        AND geds_p.grid_element_id = geds_c.grid_element_id
         AND geds_p.type = 'PRODUCER'
     LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, 'kWh') tdss_p
         ON tdss_p.timestamp = tdss_c.timestamp
-    WHERE ge.grid_element_id = '{}'
+    WHERE ge.is_producer AND ge.type = 'CircuitBreaker'
+        AND ge.grid_id = :grid_id
         AND ggd.type = 'Meter'
-    GROUP BY ge.grid_element_id, tdss_c.timestamp
-    ORDER by 2;
+    GROUP BY ge.grid_id, ge.grid_element_id, tdss_c.timestamp
+    ORDER BY 3;
     """
-formatted_query = net_consumption_kWh.format(grid_id, grid_element_id)
-feeder_net_consumption = get_ipython().run_line_magic('sql', '$formatted_query')
+feeder_net_consumption = get_ipython().run_line_magic('sql', '$net_consumption_kWh')
 
-# Convert the results to a data frame and display the top few.
 df_feeder_net_consumption = feeder_net_consumption.DataFrame()
 df_feeder_net_consumption.head()
 
 
 # ### Display *Maximum* Existing Hourly Consumption Per Day for the Given Feeder
 
-# In[18]:
+# In[ ]:
 
 
 # Plot the maximum hourly consumption per day.
-plot_consumption_per_day(df_feeder_net_consumption, grid_element_id)
+plot_consumption_per_day(df_feeder_net_consumption, grid_id)
 
 
 # ### Calculate the Available Capacity for the Given Feeder
@@ -747,11 +812,11 @@ plot_consumption_per_day(df_feeder_net_consumption, grid_element_id)
 # Calculate hourly available capacity for the given feeder and display it (a few timestamps only).
 
 # Map each feeder capacity based on the feeder id.
-feeders_map = df_feeders.set_index("grid_element_id").to_dict()["total_capacity_kW"]
+feeders_map = df_feeders.set_index("grid_id").to_dict()["total_capacity_kW"]
 
 # Map the total capacity for the specific feeder.
 df_feeder_net_consumption["total_capacity_kW"] = df_feeder_net_consumption[
-    "feeder_id"
+    "grid_id"
 ].map(feeders_map)
 
 # Calculate the hourly available capacity by subtracting the total hourly load (obtained as total hourly consumption divided by 1 hour) from the feeder's total capacity.
@@ -789,7 +854,7 @@ df_feeder_load_day = df_feeder_net_consumption.loc[
 ]
 
 # Compute and plot how many additional EV chargers can simultaneously charge within that capacity.
-plot_calc_number_of_ev_chargers(df_feeder_load_day, level_2_power_kW, grid_element_id)
+plot_calc_number_of_ev_chargers(df_feeder_load_day, level_2_power_kW, grid_id)
 
 
 # ### Growth of EV Count and Load *Over Time* for the Given Feeder 
@@ -800,7 +865,7 @@ plot_calc_number_of_ev_chargers(df_feeder_load_day, level_2_power_kW, grid_eleme
 
 # Display information about the feeder.
 df_feeder = (
-    (df_feeders[df_feeders["grid_element_id"] == grid_element_id]).copy().reset_index()
+    (df_feeders[df_feeders["grid_id"] == grid_id]).copy().reset_index()
 )
 df_feeder.drop(columns=["index"], inplace=True)
 current_ev_chargers_count_in_feeder = df_feeder["number_of_evchargers"][0]
@@ -825,7 +890,7 @@ df_feeder_ev
 plot_ev_increase(
     df_feeder_ev,
     title="Forecasting the Total Number of EVs in Feeder {} Over Time".format(
-        grid_element_id
+        grid_id
     ),
 )
 
@@ -874,7 +939,7 @@ plot_ev_load(
     df_feeder_ev,
     min_available_capacity_kW,
     title="Forecasting Increase in Average Hourly Power from All Additional EVs in Feeder {} <br><sup> Compared to historic minimum hourly available capacity</sup>".format(
-        grid_element_id
+        grid_id
     ),
     plot_available_capacity=True,
 )
@@ -931,7 +996,7 @@ plot_ev_load(
     min_available_capacity,
     title="Forecasting Increase in Average Hourly Power from 50% of Additional EVs in Feeder {} \
              <br><sup> Compared to historic minimum hourly available capacity</sup>".format(
-        grid_element_id
+        grid_id
     ),
     plot_available_capacity=True,
 )
@@ -989,7 +1054,7 @@ plot_ev_load(
     off_peak_available_capacity_kW,
     title="Forecasting Increase in Average Hourly Power All from Additional EVs in Feeder {} \
              <br><sup> Compared to historic average hourly available capacity during off-peak hours</sup>".format(
-        grid_element_id
+        grid_id
     ),
     plot_available_capacity=True,
 )
@@ -1037,46 +1102,68 @@ print(
 # Get feeders hourly maximum load. It takes a few hours to run this query. The results were saved to a file called `feeders_max_load.csv`, which is saved in the repo.
 # Users can skip this cell and use the attached file instead.
 
-# df_feeders_max_load = pd.DataFrame()
-# for _ in df_feeders['grid_element_id']:
-#     grid_id = 'North Central Zone'
-#     grid_element_id=_
-#     print(grid_element_id)
+# import time
 
-#     feeders_max_load_query = """
-#     WITH total_consumption AS (SELECT ge.grid_element_id as grid_element_id,
+# feeders_max_load_query = """
+#     WITH total_consumption AS (
+#         SELECT ge.grid_id as grid_id,
+#             ge.grid_element_id as grid_element_id,
 #             SUM(tdss_c.value - COALESCE(tdss_p.value, 0)) as net_consumption_kWh
-#     FROM grid_element ge
-#     JOIN grid_get_downstream('{}', ge.grid_element_id, 'false') ggd
-#         ON ggd.grid_id = ge.grid_id
-#     JOIN grid_element_data_source geds_c
-#         ON geds_c.grid_element_id = ggd.grid_element_id
-#         AND geds_c.type = 'CONSUMER'
-#     JOIN ts_data_source_select(geds_c.grid_element_data_source_id, 'kWh') tdss_c
-#         ON true
-#     LEFT JOIN grid_element_data_source geds_p
-#         ON geds_p.grid_element_id = geds_c.grid_element_id
-#         AND geds_p.type = 'PRODUCER'
-#     LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, 'kWh') tdss_p
-#         ON tdss_p.timestamp = tdss_c.timestamp
-#     WHERE ge.grid_element_id = '{}'
-#         AND ggd.type = 'Meter'
-#     GROUP BY ge.grid_element_id, tdss_c.timestamp) SELECT DISTINCT grid_element_id, MAX(net_consumption_kWh) as "max_kWh" from total_consumption GROUP BY grid_element_id;
+#         FROM grid_element ge
+#         JOIN grid_get_downstream(ge.grid_id, ge.grid_element_id, 'false') ggd
+#             ON ggd.grid_id = ge.grid_id
+#         JOIN grid_element_data_source geds_c
+#             ON geds_c.grid_id = ggd.grid_id
+#             AND geds_c.grid_element_id = ggd.grid_element_id
+#             AND geds_c.type = 'CONSUMER'
+#         JOIN ts_data_source_select(geds_c.grid_element_data_source_id, 'kWh') tdss_c
+#             ON true
+#         LEFT JOIN grid_element_data_source geds_p
+#             ON geds_p.grid_id = geds_c.grid_id
+#             AND geds_p.grid_element_id = geds_c.grid_element_id
+#             AND geds_p.type = 'PRODUCER'
+#         LEFT JOIN ts_data_source_select(geds_p.grid_element_data_source_id, 'kWh') tdss_p
+#             ON tdss_p.timestamp = tdss_c.timestamp
+#         WHERE ge.is_producer AND ge.type = 'CircuitBreaker'
+#             AND ge.grid_id = '{0}'
+#             AND ggd.type = 'Meter'
+#         GROUP BY ge.grid_id, ge.grid_element_id, tdss_c.timestamp
+#     )
+#     SELECT DISTINCT grid_id, grid_element_id, MAX(net_consumption_kWh) as "max_kWh"
+#     FROM total_consumption
+#     GROUP BY grid_id, grid_element_id;
 #     """
-#     # Call the query and save the results to a data frame.
-#     formatted_query = feeders_max_load_query.format(grid_id, grid_element_id)
+
+# df_feeders_max_load = pd.DataFrame()
+# total = len(grid_ids)
+# for i, grid_id in enumerate(grid_ids, start=1):
+#     start = time.time()
+
+#     formatted_query = feeders_max_load_query.format(grid_id)
 #     feeders_max_load = %sql $formatted_query
-#     df_feeders_max_load = pd.concat([df_feeders_max_load, feeders_max_load.DataFrame()])
+#     df = feeders_max_load.DataFrame()
+#     df_feeders_max_load = pd.concat([df_feeders_max_load, df], ignore_index=True)
+
+#     elapsed = time.time() - start
+#     print('[{}/{}] {} — {:.1f}s — {}'.format(i, total, grid_id, elapsed, df.to_dict('records')))
+
+# print('Done. {} feeders processed.'.format(len(df_feeders_max_load)))
+# df_feeders_max_load
 
 
 # In[ ]:
 
 
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+csv_path = csv_path or input("Enter full path to `feeders_max_load.csv` file: ").strip()
+
 # Comment out this line if you run the query above.
-df_feeders_max_load = pd.read_csv("feeders_max_load.csv")
+df_feeders_max_load = pd.read_csv(csv_path)
 
 # Combine with a per-feeder total capacity (previously computed at the beginning of Section 2).
-df_feeders_enhanced = pd.merge(df_feeders, df_feeders_max_load, on="grid_element_id")
+df_feeders_enhanced = pd.merge(df_feeders, df_feeders_max_load[['grid_id','max_kWh']], on="grid_id")
+
 df_feeders_enhanced.head()
 
 
@@ -1115,7 +1202,7 @@ df_feeders_enhanced.head()
 
 
 # Plot a histogram of how many feeders will reach capacity each year given assumptions.
-df_feeders_enhanced[year_growth_chargers].replace({"not by 2050": "Nan"}, inplace=True)
+df_feeders_enhanced[year_growth_chargers] = df_feeders_enhanced[year_growth_chargers].replace({"not by 2050": "Nan"})
 df_feeders_enhanced[year_growth_chargers] = (
     df_feeders_enhanced[year_growth_chargers].astype(float).astype("Int64")
 )  # convert to int in a way that handles NAs

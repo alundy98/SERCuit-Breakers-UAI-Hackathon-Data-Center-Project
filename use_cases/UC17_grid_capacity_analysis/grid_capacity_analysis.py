@@ -29,7 +29,9 @@
 import getpass
 import math
 import pandas as pd
-import urllib.parse
+import os
+from dotenv import load_dotenv
+import psycopg2
 import plotly.express as px
 
 pd.set_option("display.max_columns", None)
@@ -39,23 +41,59 @@ pd.set_option("display.max_columns", None)
 
 # Enter the EDM server address and the login credentials provided by Awesense. If you do not have the credentials or have any trouble connecting, please contact api@awesense.com. <span style='color:red'> **Please do NOT store the credentials in the notebook, nor share them with anyone.** </span>
 
-# In[2]:
+# In[ ]:
 
 
-edm_address = getpass.getpass(prompt='EDM server address: ')
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-print('\nEDM login information')
-edm_name = getpass.getpass(prompt='Username: ')
-edm_password = getpass.getpass(prompt='Password: ')
-edm_password = urllib.parse.quote(edm_password)
+if IN_COLAB:
+    from contextlib import suppress
+    print('☁️ Running in Google Colab. Using Colab Secrets for SQLAPI connection')
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError): os.environ['EDM_HOST'] = userdata.get('EDM_HOST')
+    with suppress(SecretNotFoundError): os.environ['EDM_USER'] = userdata.get('EDM_USER')
+    with suppress(SecretNotFoundError): os.environ['EDM_PASSWORD'] = userdata.get('EDM_PASSWORD')
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
 
-get_ipython().run_line_magic('load_ext', 'sql')
-get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
-get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
-get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if 'EDM_HOST' not in os.environ: os.environ['EDM_HOST'] = input('EDM server address: ').strip()
+if 'EDM_USER' not in os.environ: os.environ['EDM_USER'] = input('EDM username: ')
 
-# Delete the credential variables for security purposes.
-del edm_name, edm_password
+# psycopg2/libpq automatically read the PG* environment variables, so map the shared EDM_* names onto them.
+# (The password is only mapped if provided via `.env`/Colab; otherwise libpq falls back to `~/.pgpass`.)
+os.environ['PGHOST'] = os.environ['EDM_HOST']
+os.environ['PGUSER'] = os.environ['EDM_USER']
+os.environ.setdefault('PGDATABASE', 'edm')
+if 'EDM_PASSWORD' in os.environ: os.environ['PGPASSWORD'] = os.environ['EDM_PASSWORD']
+
+print('Verifying SQLAPI connection parameters/credentials with connection attempt')
+
+try:
+    # Test database connection
+    conn = psycopg2.connect('')
+    conn.close()
+    print('✅ SQLAPI connection parameters/credentials verified')
+except psycopg2.OperationalError:
+    print('⚠️ SQLAPI credentials check failed (assume missing/incorrect password, but double-check `.env` / secrets!)')
+    # Prompt user securely for password
+    os.environ['PGPASSWORD'] = getpass.getpass('Enter EDM Password manually: ')
+
+# Keeps `%sql` result tables rendering correctly on newer versions of prettytable
+import prettytable
+if 'DEFAULT' not in vars(prettytable): prettytable.DEFAULT = prettytable.TableStyle.DEFAULT
+
+# Load the SQL extension and connect
+get_ipython().run_line_magic('reload_ext', 'sql')
+get_ipython().run_line_magic('sql', 'postgresql://')
 
 
 # ### Use Case - Actual vs. Contracted Grid Capacity Analysis 
@@ -67,8 +105,30 @@ del edm_name, edm_password
 # In[ ]:
 
 
-# User input for the grid.
-grid_id = input("Enter grid ID: ")  # awefice
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+grid_id = None  # Target grid identifier (e.g., 'awefice')
+top_feeder_transformer = None  # Target feeder ID (e.g., 'transformer_2')
+
+
+# In[ ]:
+
+
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_id = grid_id or input("Enter grid ID: ").strip()  # awefice
+
+# Define the grid_id time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in grid_id), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{grid_id}'.")
 
 
 # Fetch and display all top feeders (transformers) in this grid.
@@ -76,7 +136,7 @@ grid_id = input("Enter grid ID: ")  # awefice
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'result_feeders <<', "\nSELECT grid_element_id as top_feeder_transformer\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Transformer'\n    AND is_producer = true;\n")
+get_ipython().run_cell_magic('sql', 'result_feeders <<', "\nSELECT grid_element_id as top_feeder_transformer\nFROM grid_element\nWHERE grid_id = :grid_id\n    AND type = 'Transformer'\n    AND is_producer = true;\n")
 
 
 # In[ ]:
@@ -94,8 +154,11 @@ df_feeders
 # In[ ]:
 
 
-# User input for the feeder.
-top_feeder_transformer = input("Enter feeder ID: ")  # transformer_2
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+top_feeder_transformer = (
+    top_feeder_transformer or input("Enter feeder ID: ").strip()
+)  # transformer_2
 
 
 # ### Data 
@@ -107,7 +170,7 @@ top_feeder_transformer = input("Enter feeder ID: ")  # transformer_2
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'result_meters <<', "\nSELECT ge_meter.grid_element_id as meter_id,\n    ge_meter.phases,\n    ge_meter.meta ->> 'maximal_demand' as maximal_demand,\n    ge_meter.meta ->> 'parent_transformer_id' as parent_transformer,\n    ge_trans.meta ->> 'secondary_voltage' as secondary_voltage\nFROM grid_element ge_trans\nJOIN grid_element ge_meter\n    ON ge_trans.grid_element_id = ge_meter.meta ->> 'parent_transformer_id'\nJOIN grid_get_downstream('{grid_id}', '{top_feeder_transformer}', 'false') ggd\n    ON ggd.grid_element_id = ge_trans.grid_element_id\nWHERE ge_meter.type = 'Meter'\nORDER BY LENGTH(ge_meter.phases), ge_meter.phases,\n        cast(substring(ge_meter.grid_element_id, 3, 2) as int) asc;\n")
+get_ipython().run_cell_magic('sql', 'result_meters <<', "\nSELECT ge_meter.grid_element_id as meter_id,\n    ge_meter.phases,\n    ge_meter.meta ->> 'maximal_demand' as maximal_demand,\n    ge_meter.meta ->> 'parent_transformer_id' as parent_transformer,\n    ge_trans.meta ->> 'secondary_voltage' as secondary_voltage\nFROM grid_element ge_trans\nJOIN grid_element ge_meter\n    ON ge_trans.grid_element_id = ge_meter.meta ->> 'parent_transformer_id'\nJOIN grid_get_downstream(:grid_id, :top_feeder_transformer, 'false') ggd\n    ON ggd.grid_element_id = ge_trans.grid_element_id\nWHERE ge_meter.type = 'Meter'\nORDER BY LENGTH(ge_meter.phases), ge_meter.phases,\n        cast(substring(ge_meter.grid_element_id, 3, 2) as int) asc;\n")
 
 
 # In[ ]:
@@ -159,10 +222,10 @@ print(
 
 # Fetch all meters downstream from the top feeder and their hourly net consumer load time series.
 
-# In[10]:
+# In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'result_system <<', '\nSELECT tdss.timestamp at time zone \'America/Vancouver\' as timestamp,\n        ggd.grid_element_id as meter_id,\n        tdss.value as "kWh",\n        geds.type\nFROM grid_get_downstream(\'{grid_id}\', \'{top_feeder_transformer}\') AS ggd\nLEFT JOIN grid_element_data_source geds\n    ON geds.grid_id = ggd.grid_id\n    AND geds.grid_element_id = ggd.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss\n    ON TRUE\nWHERE ggd.type = \'Meter\'\n    AND geds.type = \'CONSUMER\'\nORDER BY tdss.timestamp, meter_id;\n')
+get_ipython().run_cell_magic('sql', 'result_system <<', '\nSELECT tdss.timestamp at time zone :time_zone as timestamp,\n        ggd.grid_element_id as meter_id,\n        tdss.value as "kWh",\n        geds.type\nFROM grid_get_downstream(:grid_id, :top_feeder_transformer) AS ggd\nLEFT JOIN grid_element_data_source geds\n    ON geds.grid_id = ggd.grid_id\n    AND geds.grid_element_id = ggd.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, \'kWh\') tdss\n    ON TRUE\nWHERE ggd.type = \'Meter\'\n    AND geds.type = \'CONSUMER\'\nORDER BY tdss.timestamp, meter_id;\n')
 
 
 # In[ ]:
@@ -181,7 +244,7 @@ df_system_agg = (
 
 # Aggregate the sum of the hourly load by days and find the maximum load.
 df_system_agg_daily = (
-    df_system_agg.groupby(pd.Grouper(key="timestamp", axis=0, freq="D"))
+    df_system_agg.groupby(pd.Grouper(key="timestamp", freq="D"))
     .max()
     .reset_index()
 )

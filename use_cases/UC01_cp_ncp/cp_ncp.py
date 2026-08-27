@@ -21,9 +21,13 @@
 
 
 import getpass
-import urllib.parse
 import pandas as pd
 import plotly.express as px
+import os
+from dotenv import load_dotenv
+import psycopg2
+import datetime
+import pytz
 
 
 # **Connection**
@@ -34,20 +38,56 @@ import plotly.express as px
 # In[ ]:
 
 
-edm_address = getpass.getpass(prompt='EDM server address: ')
+# Checks for Google Colab: If detected,
+# it bypasses reading credentials from local files and securely draws from Colab Secrets.
+try:
+    from google.colab import userdata
+    from google.colab.userdata import SecretNotFoundError
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-print('\nEDM login information')
-edm_name = getpass.getpass(prompt='Username: ')
-edm_password = getpass.getpass(prompt='Password: ')
-edm_password = urllib.parse.quote(edm_password)
+if IN_COLAB:
+    from contextlib import suppress
+    print('☁️ Running in Google Colab. Using Colab Secrets for SQLAPI connection')
+    # Look for Colab Secrets, fall back to interactive prompts if missing
+    with suppress(SecretNotFoundError): os.environ['EDM_HOST'] = userdata.get('EDM_HOST')
+    with suppress(SecretNotFoundError): os.environ['EDM_USER'] = userdata.get('EDM_USER')
+    with suppress(SecretNotFoundError): os.environ['EDM_PASSWORD'] = userdata.get('EDM_PASSWORD')
+else:
+    # If running locally, loads connection parameters from a `.env` file (in this directory or parent directories)
+    load_dotenv()
 
-get_ipython().run_line_magic('load_ext', 'sql')
-get_ipython().run_line_magic('sql', 'postgresql://$edm_name:$edm_password@$edm_address/edm')
-get_ipython().run_line_magic('config', 'SqlMagic.displaycon = False')
-get_ipython().run_line_magic('config', 'SqlMagic.feedback = False')
+# Prompt the user to manually enter any missing connection parameters not found in `.env` file / Google Colab Secrets
+if 'EDM_HOST' not in os.environ: os.environ['EDM_HOST'] = input('EDM server address: ').strip()
+if 'EDM_USER' not in os.environ: os.environ['EDM_USER'] = input('EDM username: ')
 
-# Delete the credential variables for security purposes.
-del edm_name, edm_password
+# psycopg2/libpq automatically read the PG* environment variables, so map the shared EDM_* names onto them.
+# (The password is only mapped if provided via `.env`/Colab; otherwise libpq falls back to `~/.pgpass`.)
+os.environ['PGHOST'] = os.environ['EDM_HOST']
+os.environ['PGUSER'] = os.environ['EDM_USER']
+os.environ.setdefault('PGDATABASE', 'edm')
+if 'EDM_PASSWORD' in os.environ: os.environ['PGPASSWORD'] = os.environ['EDM_PASSWORD']
+
+print('Verifying SQLAPI connection parameters/credentials with connection attempt')
+
+try:
+    # Test database connection
+    conn = psycopg2.connect('')
+    conn.close()
+    print('✅ SQLAPI connection parameters/credentials verified')
+except psycopg2.OperationalError:
+    print('⚠️ SQLAPI credentials check failed (assume missing/incorrect password, but double-check `.env` / secrets!)')
+    # Prompt user securely for password
+    os.environ['PGPASSWORD'] = getpass.getpass('Enter EDM Password manually: ')
+
+# Keeps `%sql` result tables rendering correctly on newer versions of prettytable
+import prettytable
+if 'DEFAULT' not in vars(prettytable): prettytable.DEFAULT = prettytable.TableStyle.DEFAULT
+
+# Load the SQL extension and connect
+get_ipython().run_line_magic('reload_ext', 'sql')
+get_ipython().run_line_magic('sql', 'postgresql://')
 
 
 # **Custom Functions**
@@ -92,7 +132,7 @@ def plot_line_bar(df, df_agg, df_cp, title):
     )
 
     # Order the resulting dataframe to display stacked bar properly.
-    df_full.sort_values("value_cp", ascending=False, inplace=True)
+    df_full = df_full.sort_values("value_cp", ascending=False)
 
     # Plot a stacked bar chart first.
     fig = px.bar(
@@ -185,7 +225,7 @@ def compute_ncp(df):
     """
 
     # Calculate the max meter load regardless regardless of time.
-    df_ncp = df.groupby("grid_element_id").max("value").reset_index()
+    df_ncp = df.groupby("grid_element_id").max(numeric_only=True).reset_index()
 
     # Find timestamps of NCP values by merging `df` and `df_ncp`.
     df_ncp = df.merge(df_ncp, on=["grid_element_id", "value"])
@@ -225,15 +265,47 @@ def plot_scatter(df_ncp, title):
 # In[ ]:
 
 
-grid_id = input("Enter grid ID: ")  # awefice
-start = input("Enter start date (inclusive): ")  # 2022-03-01 00:00:00-07
-end = input("Enter end date (inclusive): ")  # 2022-03-02 00:00:00-07
+# PARAMETERS (Cell Tag: parameters)
+# Do not split this cell structure. Papermill injects automated
+# runtime overrides immediately below this block.
+# If you don't want to be asked for input for these parameters, you can set them here.
+grid_id = None  # Target grid identifier (e.g., 'awefice')
+feeder_id = None  # Downstream feeder transformer name (e.g., 'transformer_6')
+tariff_id = None  # Customer billing rate group (e.g., 'res_basic')
+start = None  # Time series range start date (YYYY-MM-DD HH:MM:SS)
+end = None  # Time series range end date (YYYY-MM-DD HH:MM:SS)
 
-# Create a timerange using start and end date to use as an input argument.
-timerange_tz = "[" + start + ", " + end + "]"
 
-# Drop timezone offset to use in title.
-timerange = start[:10] + " ~ " + end[:10]
+# In[ ]:
+
+
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+grid_id = grid_id or input("Enter grid ID: ").strip()  # awefice
+
+# Define the grid_id time zone by matching on whether the grid_id contains a known substring.
+time_zones = {
+    "awefice": "America/Vancouver",
+    "SAF": "America/Denver",
+    "GSO": "America/New_York",
+}
+time_zone = next((tz for name, tz in time_zones.items() if name in grid_id), None)
+if time_zone is None:
+    raise ValueError(f"No time zone mapping found for grid_id '{grid_id}'.")
+
+start = (
+    start or input("Enter start date (YYYY-MM-DD HH:MM:SS): ").strip()
+)  # 2022-03-01 00:00:00
+end = (
+    end or input("Enter end date (YYYY-MM-DD HH:MM:SS): ").strip()
+)  # 2022-04-01 00:00:00
+
+date_format = "%Y-%m-%d %H:%M:%S"
+local_timezone = pytz.timezone(time_zone)
+start_tz = local_timezone.localize(datetime.datetime.strptime(start, date_format))
+end_tz = local_timezone.localize(datetime.datetime.strptime(end, date_format))
+
+timerange = f"{start_tz} ~ {end_tz}"  # time range label for chart titles
 
 
 # ## System
@@ -243,7 +315,7 @@ timerange = start[:10] + " ~ " + end[:10]
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp at time zone 'America/Vancouver' as timestamp,\n        ge.grid_element_id,\n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(geds.grid_element_data_source_id, 'kWh', '{timerange_tz}') tdss\n    ON TRUE\nWHERE geds.grid_id = '{grid_id}'\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER'\nORDER BY tdss.timestamp;\n")
+get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp at time zone :time_zone as timestamp,\n        ge.grid_element_id,\n        tdss.value\nFROM grid_element ge\nJOIN grid_element_data_source geds\n    ON geds.grid_id = ge.grid_id\n    AND geds.grid_element_id = ge.grid_element_id\nJOIN ts_data_source_select(\n        geds.grid_element_data_source_id, 'kWh', tstzrange(:start_tz, :end_tz)\n    ) tdss ON TRUE\nWHERE geds.grid_id = :grid_id\n    AND ge.type = 'Meter'\n    AND geds.type = 'CONSUMER'\nORDER BY tdss.timestamp;\n")
 
 
 # #### Visualization
@@ -255,7 +327,7 @@ get_ipython().run_cell_magic('sql', 'result_system <<', "\nSELECT tdss.timestamp
 df_system = result_system.DataFrame()
 
 # Aggregate loads for each hour.
-df_system_agg = df_system.groupby("timestamp").sum("value")
+df_system_agg = df_system.groupby("timestamp").sum(numeric_only=True)
 
 # Plot the system time series.
 plot_line(
@@ -335,7 +407,7 @@ meters = "','".join(df_grid_cp["grid_element_id"].unique())
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'grid_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND grid_element_id IN ('{meters}')\n")
+get_ipython().run_cell_magic('sql', 'grid_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude\nFROM grid_element\nWHERE grid_id = :grid_id\n    AND grid_element_id IN ('{meters}')\n")
 
 
 # In[ ]:
@@ -374,7 +446,9 @@ df_grid_ncp.sort_values("timestamp").set_index("timestamp")
 # In[ ]:
 
 
-feeder_id = input("Enter top feeder transformer ID: ")  # transformer_6
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+feeder_id = feeder_id or input("Enter feeder ID: ").strip()  # transformer_6
 
 
 # #### Data: Downstream Meters & Geo-locations
@@ -382,7 +456,7 @@ feeder_id = input("Enter top feeder transformer ID: ")  # transformer_6
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'feeder_meters <<', "SELECT ggd.grid_element_id, ge.geometry, ge.type,\n    ST_Y(ge.geometry) as latitude,\n    ST_X(ge.geometry) as longitude\nFROM grid_get_downstream('{grid_id}', '{feeder_id}') ggd\nJOIN grid_element ge\n    ON ge.grid_id = ggd.grid_id\n    AND ge.grid_element_id = ggd.grid_element_id\nWHERE ge.grid_element_id NOT LIKE ('line_segment%')\n    AND ge.grid_element_id NOT LIKE ('busbar%');\n")
+get_ipython().run_cell_magic('sql', 'feeder_meters <<', "SELECT ggd.grid_element_id, ge.geometry, ge.type,\n    ST_Y(ge.geometry) as latitude,\n    ST_X(ge.geometry) as longitude\nFROM grid_get_downstream(:grid_id, :feeder_id) ggd\nJOIN grid_element ge\n    ON ge.grid_id = ggd.grid_id\n    AND ge.grid_element_id = ggd.grid_element_id\nWHERE ge.grid_element_id NOT LIKE ('line_segment%')\n    AND ge.grid_element_id NOT LIKE ('busbar%');\n")
 
 
 # In[ ]:
@@ -481,7 +555,9 @@ df_feeder_ncp.sort_values("timestamp").set_index("timestamp")
 # In[ ]:
 
 
-tariff_id = input("Enter Tariff ID: ")  # res_basic
+# Short-circuit check: If Papermill didn't inject values, prompt the user.
+# To skip these prompts, set the parameter values directly in the parameters cell above (PAPERMILL PARAMETERS).
+tariff_id = tariff_id or input("Enter tariff ID: ").strip()  # res_basic
 
 
 # #### Data: Tariff Group Meters & Geo-locations
@@ -489,7 +565,7 @@ tariff_id = input("Enter Tariff ID: ")  # res_basic
 # In[ ]:
 
 
-get_ipython().run_cell_magic('sql', 'tariff_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude\nFROM grid_element\nWHERE grid_id = '{grid_id}'\n    AND type = 'Meter'\n    AND meta ->> 'tariff_id' = '{tariff_id}';\n")
+get_ipython().run_cell_magic('sql', 'tariff_meters <<', "\nSELECT grid_element_id,\n    ST_Y(geometry) as latitude,\n    ST_X(geometry) as longitude\nFROM grid_element\nWHERE grid_id = :grid_id\n    AND type = 'Meter'\n    AND meta->>'tariff_id' = :tariff_id;\n")
 
 
 # In[ ]:
