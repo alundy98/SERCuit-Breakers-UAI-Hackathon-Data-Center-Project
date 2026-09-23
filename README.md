@@ -182,3 +182,5 @@ NOTE: While notebooks were saved to include chart outputs, GitHub does not rende
 
 ## License
 edm-app-examples is licensed under the [MIT license](LICENSE).
+#   S E R C u i t - B r e a k e r s - U A I - H a c k a t h o n - D a t a - C e n t e r - P r o j e c t  
+ 

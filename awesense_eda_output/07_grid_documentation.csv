@@ -1,0 +1,33 @@
+class_name,column_name,data_type,description
+grid,,VIEW,A grid represents a portion of a utility's grid. A single all-inclusive grid may be used or it may be partitioned into smaller grids.
+grid,description,text,Description of the grid.
+grid,grid_id,text,Primary key of the grid.
+grid,last_updated,timestamp with time zone,The time when this grid was last updated.
+grid_element,,VIEW,Grid elements represent the physical elements that comprise the grid.
+grid_element,customer_type,text,Customer-defined grid element type.
+grid_element,geometry,ext.geometry,Geometry for this grid_element in PostGIS format.
+grid_element,grid_element_id,text,Primary key of this grid_element.
+grid_element,grid_id,text,Foreign key (grid.grid_id) of the grid containing this grid_element.
+grid_element,is_consumer,boolean,Indicates whether this grid_element is a consumer of power from the grid.
+grid_element,is_producer,boolean,Indicates whether this grid_element is a source of power into the grid.
+grid_element,is_switchable,boolean,Indicates whether this grid_element is a switchable element.
+grid_element,is_underground,boolean,Indicates whether this grid_element is underground.
+grid_element,meta,jsonb,Additional metadata for this grid_element stored as JSONB. Includes all schema properties without dedicated columns and all non-schema properties.
+grid_element,phases,character varying,"Phases available at the grid_element (combination of A, B, or C)."
+grid_element,power_flow_direction,text,"Direction of power flow through this grid_element relative to terminal1 and terminal2 ('1to2', '2to1' or 'both')."
+grid_element,switch_is_open,boolean,Indicates switch state of this grid_element. True is an open (non-conducting) switch. False is a closed (conducting) switch. NULL is an unknown switch state.
+grid_element,terminal1_cn,text,Connectivity node ID for terminal 1 of this grid_element.
+grid_element,terminal2_cn,text,Connectivity node ID for terminal 2 of this grid_element.
+grid_element,type,text,Internal type of this grid_element.
+grid_element,upstream_grid_element_id,text,Foreign key (grid_element.grid_element_id) of the upstream grid_element.
+grid_element_data_source,,VIEW,Grid element data sources represent the linking between time-series data and physical elements on the grid.
+grid_element_data_source,direction,text,Direction of current flowing through the sensor.
+grid_element_data_source,friendly_id,text,Human readable ID for the grid_element_data_source. Typically is the name of the sensor the data was measured with.
+grid_element_data_source,grid_element_data_source_id,uuid,Primary key of this grid_element_data_source.
+grid_element_data_source,grid_element_id,text,Foreign key (grid_element.grid_element_id) of the grid element associated with this grid_element_data_source.
+grid_element_data_source,grid_id,text,Foreign key (grid.grid_id) of the grid containing this grid_element_data_source.
+grid_element_data_source,metrics,text[],The units of measurements that can be retrieved by this grid_element_data_source as a text array
+grid_element_data_source,phases,text,"Phases available at the grid_element (combination of A, B, or C)."
+grid_element_data_source,provider,text,Internal type of this grid_element_data_source. Represents origin of the stored data.
+grid_element_data_source,type,text,"Internal type of this grid_element_data_source. Represents the class of stored data, for charting and analytics purposes."
+grid_element_data_source,valid,tstzrange,Timerange in which this data linking is considered to be active.

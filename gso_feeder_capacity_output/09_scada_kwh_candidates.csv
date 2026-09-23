@@ -1,0 +1,127 @@
+grid_id,grid_element_data_source_id,grid_element_id,element_type,customer_type,is_producer,is_consumer,data_source_type,provider,metrics,friendly_id,direction,valid,candidate_score,candidate_rank
+GSO_1,ea496fcb-6216-4db1-9885-1da5dbf70fa2,br_01_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_01_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_1,b1e8c057-fded-4c70-8f86-a33db401b6d1,br_01_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_01_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_1,ba6970aa-af7f-428e-9a4f-7826618684b4,br_01_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_01_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_10,396f73e2-6041-46ac-90d5-a9439aef50d8,br_015_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_015_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_10,b315ece6-7341-4cdf-a1c9-70a8dbfe93ff,br_015_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_015_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_10,d140ab36-31a8-40c7-820d-c3a2df82604a,br_015_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_015_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_10,f79ddf4f-dd35-4db4-a80a-aadd84f44a05,m_10416_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_10416_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_10,253ed78b-4f1c-4309-9581-844c9244e793,m_10416_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_10416_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_10,d58fefa9-2a0c-4d39-ab40-320be4379d7d,m_13877_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_13877_21,,"[2024-01-01 05:00:00+00:00, None)",20,6
+GSO_10,1d239cd4-a7bb-4be5-a76b-5abd91d882d5,m_13877_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_13877_21,,"[2024-01-01 05:00:00+00:00, None)",20,7
+GSO_10,a1ccc62b-a4e3-4161-a6a3-6361341a840d,m_17991_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_17991_21,,"[2024-01-01 05:00:00+00:00, None)",20,8
+GSO_10,018bf102-a380-436d-8bdd-bbe228d55b1c,m_17991_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_17991_21,,"[2024-01-01 05:00:00+00:00, None)",20,9
+GSO_10,31bd31e3-2c95-45b8-993d-0d8c26045817,m_5481_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_5481_21,,"[2024-01-01 05:00:00+00:00, None)",20,10
+GSO_10,4b234239-c827-42a3-979c-78d87c4d597d,m_5481_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_5481_21,,"[2024-01-01 05:00:00+00:00, None)",20,11
+GSO_10,07570224-bdc0-4fc4-8aa3-a8fac91710d3,m_5507_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_5507_21,,"[2024-01-01 05:00:00+00:00, None)",20,12
+GSO_10,0c3458bf-8ce3-4bd3-9661-bf43ba197e85,m_5507_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_5507_21,,"[2024-01-01 05:00:00+00:00, None)",20,13
+GSO_10,f9ba7d07-3b76-4f0c-bd2e-6c923bbd1173,m_5527_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_5527_21,,"[2024-01-01 05:00:00+00:00, None)",20,14
+GSO_10,a67fec6a-dba6-40c7-96a4-89e94a72b3e4,m_5527_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_5527_21,,"[2024-01-01 05:00:00+00:00, None)",20,15
+GSO_10,12922297-a342-4dfc-8987-dd24a14f7418,pv_10416_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_10416_21,,"[2024-01-01 05:00:00+00:00, None)",10,16
+GSO_10,01077374-b74f-4c57-9441-7543b4d607f7,pv_13877_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_13877_21,,"[2024-01-01 05:00:00+00:00, None)",10,17
+GSO_10,ecd1511e-b54d-4018-b54c-5a837590269b,pv_17991_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_17991_21,,"[2024-01-01 05:00:00+00:00, None)",10,18
+GSO_10,d4d25a91-241b-4da9-b399-e6cfac9f487a,pv_5481_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_5481_21,,"[2024-06-20 05:00:00+00:00, None)",10,19
+GSO_10,a1b71b0b-c0d0-4a81-8723-c50c681aca2d,pv_5507_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_5507_21,,"[2024-01-01 05:00:00+00:00, None)",10,20
+GSO_10,1337d4b8-5e8f-4819-b53c-0ba4b7d32f4a,pv_5527_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_5527_21,,"[2024-03-20 05:00:00+00:00, None)",10,21
+GSO_2,e16fe26a-3331-4e10-bcda-3d5b4cfc42bc,br_02_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_02_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_2,a28c1752-7f45-48c2-b058-b7cdc091e5d6,br_02_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_02_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_2,f5b81547-937f-4c70-92ba-8a0fb6594394,br_02_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_02_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_2,6aaddf20-b0a1-4a4c-9632-35922de508db,m_148_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_148_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_2,fc8eb9dd-80b0-427d-80a3-38efe3732bbd,m_148_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_148_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_2,dd7f6095-fcb0-4de7-a9f4-bfd1afedf543,m_18667_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_18667_21,,"[2024-01-01 05:00:00+00:00, None)",20,6
+GSO_2,ee93abb3-f221-4d0d-b6a0-109c5a3685cd,m_18667_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_18667_21,,"[2024-01-01 05:00:00+00:00, None)",20,7
+GSO_2,1be5d8e7-9a97-41a9-b516-752c898473dd,m_26248_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_26248_21,,"[2024-01-01 05:00:00+00:00, None)",20,8
+GSO_2,03d419f1-bf04-4753-a3a1-fd296c7063cd,m_26248_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_26248_21,,"[2024-01-01 05:00:00+00:00, None)",20,9
+GSO_2,ac0c7d29-f307-4ff0-afab-e48fc2f2c7bf,m_28514_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_28514_21,,"[2024-01-01 05:00:00+00:00, None)",20,10
+GSO_2,c90f378f-115d-4fd7-95ad-2ea05dccce1a,m_28514_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_28514_21,,"[2024-01-01 05:00:00+00:00, None)",20,11
+GSO_2,b3a024cf-c562-437e-ac89-8f69267da3b9,m_31559_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_31559_21,,"[2024-01-01 05:00:00+00:00, None)",20,12
+GSO_2,2e57cfb8-17d3-4064-87ad-364692051beb,m_31559_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_31559_21,,"[2024-01-01 05:00:00+00:00, None)",20,13
+GSO_2,f8080ed7-ee53-4f68-9511-f98ff7789570,m_45617_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_45617_21,,"[2024-01-01 05:00:00+00:00, None)",20,14
+GSO_2,7484b131-5522-4576-9d95-ce8c06d92457,m_45617_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_45617_21,,"[2024-01-01 05:00:00+00:00, None)",20,15
+GSO_2,48fa160f-5683-4d3e-8ea9-6557b09a20de,m_57882_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_57882_21,,"[2024-01-01 05:00:00+00:00, None)",20,16
+GSO_2,46c333d6-dfe2-4541-ac6d-a50d2c765307,m_57882_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_57882_21,,"[2024-01-01 05:00:00+00:00, None)",20,17
+GSO_2,7b0d2e07-e45a-4a1f-8444-6181d2a5f218,m_57915_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_57915_21,,"[2024-01-01 05:00:00+00:00, None)",20,18
+GSO_2,6f546dda-eb78-4ad0-b748-04dff11498dc,m_57915_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_57915_21,,"[2024-01-01 05:00:00+00:00, None)",20,19
+GSO_2,e3d8a3d2-7715-4c6a-9c72-e53c3200e45b,pv_148_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_148_21,,"[2025-12-19 06:00:00+00:00, None)",10,20
+GSO_2,189f7cf2-a607-40a1-8847-954e81435969,pv_18667_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_18667_21,,"[2024-01-01 05:00:00+00:00, None)",10,21
+GSO_2,198efe20-5f21-4251-a6ca-6769440fd840,pv_26248_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_26248_21,,"[2026-01-09 06:00:00+00:00, None)",10,22
+GSO_2,91be6def-b3ed-4542-837f-727de908d9e1,pv_28514_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_28514_21,,"[2024-01-01 05:00:00+00:00, None)",10,23
+GSO_2,04679351-c7a5-45e7-bd32-e5cd0553e473,pv_31559_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_31559_21,,"[2024-01-01 05:00:00+00:00, None)",10,24
+GSO_2,25127efb-45ef-4e57-9191-a59d6634fd32,pv_45617_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_45617_21,,"[2026-02-04 06:00:00+00:00, None)",10,25
+GSO_2,fc136512-3452-4850-b91d-03ffd9a5038b,pv_57882_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_57882_21,,"[2024-01-01 05:00:00+00:00, None)",10,26
+GSO_2,8d0a6168-e9c1-44ce-addd-690721b0c8f1,pv_57915_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_57915_21,,"[2024-01-01 05:00:00+00:00, None)",10,27
+GSO_3,cabb02b4-86e3-4261-87ef-66f06902bb61,br_03_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_03_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_3,262d1506-d23e-42d2-a938-f15cb2f35365,br_03_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_03_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_3,861d3fe8-4f6d-46b5-bb00-6d79ddaf889d,br_03_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_03_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_4,67c44f52-c49c-4993-940f-90408b4b9ae5,br_04_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_04_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_4,1da22d5c-e6b3-4228-b327-ddf40f1f21b6,br_04_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_04_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_4,eda55f14-fedc-4eb6-a389-a51a43231405,br_04_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_04_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_4,94f99999-a30c-4628-b734-9c664d8e9511,m_18332_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_18332_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_4,7484fa24-bed4-43ee-a826-79b8a4fcc891,m_18332_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_18332_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_4,cf8a277a-c1dc-41a7-bfe0-2c9a2302aced,m_24473_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_24473_21,,"[2024-01-01 05:00:00+00:00, None)",20,6
+GSO_4,8ea3b5e1-ee95-411e-8ff6-e4be30152a67,m_24473_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_24473_21,,"[2024-01-01 05:00:00+00:00, None)",20,7
+GSO_4,22cae9bb-d9f1-4fcc-8f24-7d238f5ce96a,m_27428_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_27428_21,,"[2024-01-01 05:00:00+00:00, None)",20,8
+GSO_4,7a36270e-bf38-4825-95c1-d237a05ee783,m_27428_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_27428_21,,"[2024-01-01 05:00:00+00:00, None)",20,9
+GSO_4,43434d07-cc7f-4d63-9694-dac1dc77b4bc,m_30103_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_30103_21,,"[2024-01-01 05:00:00+00:00, None)",20,10
+GSO_4,d39b7402-1377-4950-8bfd-d9adc8a7391c,m_30103_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_30103_21,,"[2024-01-01 05:00:00+00:00, None)",20,11
+GSO_4,96079b38-b2bf-4b92-b35d-51991bfa26e3,m_34254_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_34254_21,,"[2024-01-01 05:00:00+00:00, None)",20,12
+GSO_4,ccabc472-556d-42df-b7f7-193efcc0cdd8,m_34254_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_34254_21,,"[2024-01-01 05:00:00+00:00, None)",20,13
+GSO_4,cc6f99a0-56af-48a8-af10-69a4b4a1172c,m_37929_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_37929_21,,"[2024-01-01 05:00:00+00:00, None)",20,14
+GSO_4,c32e8d3e-b5f7-4dbc-8646-660722ae47cd,m_37929_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_37929_21,,"[2024-01-01 05:00:00+00:00, None)",20,15
+GSO_4,b7b82353-788d-4d20-b91a-83bcafc58eb3,m_39722_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_39722_21,,"[2024-01-01 05:00:00+00:00, None)",20,16
+GSO_4,7acc4fbd-9606-44ac-a6b6-302f6dd3fc11,m_39722_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_39722_21,,"[2024-01-01 05:00:00+00:00, None)",20,17
+GSO_4,7520bfd6-3322-4fda-b393-96d62c1ea80d,m_40452_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_40452_21,,"[2024-01-01 05:00:00+00:00, None)",20,18
+GSO_4,24613584-ec00-4006-8c39-bc50eda7266a,m_40452_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_40452_21,,"[2024-01-01 05:00:00+00:00, None)",20,19
+GSO_4,934b5688-4a19-488b-b35c-ca542015db7d,m_46616_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_46616_21,,"[2024-01-01 05:00:00+00:00, None)",20,20
+GSO_4,2c3b44a1-6910-4e20-8505-a9564857253c,m_46616_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_46616_21,,"[2024-01-01 05:00:00+00:00, None)",20,21
+GSO_4,1021663f-d2f3-4188-b12d-29e79faeaebb,pv_18332_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_18332_21,,"[2024-01-01 05:00:00+00:00, None)",10,22
+GSO_4,74b533ea-d61d-43c2-963e-ac7ae223eec8,pv_24473_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_24473_21,,"[2024-01-01 05:00:00+00:00, None)",10,23
+GSO_4,72a2cb31-4c8d-49b8-92c1-b008c1d59ef1,pv_27428_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_27428_21,,"[2024-01-01 05:00:00+00:00, None)",10,24
+GSO_4,bd15b82e-26aa-459d-bdb4-4aa98d26cd55,pv_30103_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_30103_21,,"[2026-02-05 06:00:00+00:00, None)",10,25
+GSO_4,bc45b7fb-2b63-47c2-a128-a958298b6b2c,pv_34254_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_34254_21,,"[2024-01-01 05:00:00+00:00, None)",10,26
+GSO_4,8077fb91-2ff5-4d2b-bb9c-5230850d51f3,pv_37929_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_37929_21,,"[2024-01-01 05:00:00+00:00, None)",10,27
+GSO_4,1e26c5c9-e8b7-4e22-a32c-15db03a66036,pv_39722_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_39722_21,,"[2024-01-01 05:00:00+00:00, None)",10,28
+GSO_4,540ef1ed-435b-4e57-8fe4-4fead80136a6,pv_40452_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_40452_21,,"[2026-11-26 06:00:00+00:00, None)",10,29
+GSO_4,4c577c5b-b16d-49e3-9c85-9d9d1a4b3f0c,pv_46616_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_46616_21,,"[2024-01-01 05:00:00+00:00, None)",10,30
+GSO_5,1a7b2ce3-8ce4-43f0-822c-bae88f338574,br_05_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_05_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_5,fdea0e08-11f9-40c1-bd4a-4dfdb8ea2803,br_05_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_05_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_5,921b5057-9802-4094-b921-551288ad3d2e,br_05_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_05_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_5,639a90af-7bbc-49f0-9850-d122a36e9ffe,m_22902_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_22902_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_5,368db87c-f085-4b8a-8491-6fc6c28bfff3,m_22902_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_22902_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_5,b8ddb594-fd4e-4aab-be70-ec281def56b4,m_23943_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_23943_21,,"[2024-01-01 05:00:00+00:00, None)",20,6
+GSO_5,f795029a-5577-42e8-9a2a-f26a8fb84988,m_23943_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_23943_21,,"[2024-01-01 05:00:00+00:00, None)",20,7
+GSO_5,4cd5ac13-5dee-491f-8e93-b044769b5b0a,m_30819_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_30819_21,,"[2024-01-01 05:00:00+00:00, None)",20,8
+GSO_5,4a60c5f8-2d0e-41cd-8414-49c9eff975ea,m_30819_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_30819_21,,"[2024-01-01 05:00:00+00:00, None)",20,9
+GSO_5,6447356c-bd3f-4f2d-aeed-bd4b558ebe51,m_34822_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_34822_21,,"[2024-01-01 05:00:00+00:00, None)",20,10
+GSO_5,6e10bb07-6979-4f96-ad8e-96aaacbc90a3,m_34822_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_34822_21,,"[2024-01-01 05:00:00+00:00, None)",20,11
+GSO_5,78d62566-88b5-4c2f-a36d-98862ccf4cd6,m_43568_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_43568_21,,"[2024-01-01 05:00:00+00:00, None)",20,12
+GSO_5,411a0ca0-2428-465b-9b4a-086c07ad7256,m_43568_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_43568_21,,"[2024-01-01 05:00:00+00:00, None)",20,13
+GSO_5,2d184774-0560-4521-b95c-14c6368abdba,pv_22902_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_22902_21,,"[2024-01-01 05:00:00+00:00, None)",10,14
+GSO_5,dc4380b1-c581-4201-b45f-1613198c36bd,pv_23943_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_23943_21,,"[2024-01-01 05:00:00+00:00, None)",10,15
+GSO_5,ede7b988-dfb4-4d05-b468-26d0ff140d70,pv_30819_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_30819_21,,"[2024-01-01 05:00:00+00:00, None)",10,16
+GSO_5,e8741266-ed88-4361-9e66-0a214bbf3f98,pv_34822_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_34822_21,,"[2024-01-01 05:00:00+00:00, None)",10,17
+GSO_5,15c35450-4c1e-4ca6-9c5e-0a2cc9415acd,pv_43568_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_43568_21,,"[2024-12-20 06:00:00+00:00, None)",10,18
+GSO_6,a5d804f2-bcf0-4e70-ad7f-9ffc889ca71a,br_06_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_06_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_6,145f4423-0120-41c0-a961-6f6b453e91a7,br_06_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_06_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_6,120599d7-eee0-4966-bd20-36d9e2e8b089,br_06_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_06_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_6,fc7e5a92-9008-4298-a0c3-eb66a85d4bc5,m_23493_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_23493_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_6,bb62b27a-37b1-41cf-bcb7-ab558fb6756d,m_23493_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_23493_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_6,9f23571d-23fe-4c01-bf40-e3af96902aae,pv_23493_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_23493_21,,"[2024-01-01 05:00:00+00:00, None)",10,6
+GSO_7,7c4e0a27-0ba8-4589-8efa-9d78e22aeea7,br_07_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_07_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_7,874fce3a-0ddc-405e-8b4d-496bf1208ffa,br_07_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_07_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_7,b3997dcd-0479-4422-904f-1e86aedb3b49,br_07_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_07_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_7,ab19de64-9d68-48d9-935e-ba15aafbb273,m_24312_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_24312_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_7,c4ff7809-31b7-4ced-897d-0db40a9de465,m_24312_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_24312_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_7,4d97ac6f-0005-4773-abee-1c319f2a5c04,m_27858_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_27858_21,,"[2024-01-01 05:00:00+00:00, None)",20,6
+GSO_7,08cca047-4f80-4270-a8b6-37d078b300bb,m_27858_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_27858_21,,"[2024-01-01 05:00:00+00:00, None)",20,7
+GSO_7,ca7e9e0b-5fa7-4ad2-b9c3-e9007976a084,pv_24312_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_24312_21,,"[2025-01-07 06:00:00+00:00, None)",10,8
+GSO_7,5c99fdc8-700d-40c3-8489-1ed20859c0f1,pv_27858_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_27858_21,,"[2024-01-01 05:00:00+00:00, None)",10,9
+GSO_8,14a29c10-6f6b-4045-834c-a8cdccfa7fe8,br_022_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_022_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_8,674756f5-28ec-40f8-8ece-cd6c8a394c18,br_022_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_022_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_8,9e0bf50d-94bd-4e5d-9a43-95a506f4c534,br_022_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_022_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_9,9b89dc0e-e258-4610-b60b-484b1b02a312,br_023_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_023_21.C,,"[2024-01-01 05:00:00+00:00, None)",160,1
+GSO_9,c7e10126-bd63-4bd3-96ab-07587af29378,br_023_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_023_21.A,,"[2024-01-01 05:00:00+00:00, None)",160,2
+GSO_9,f631ee12-3be7-417b-ad19-901e9ad68684,br_023_21,CircuitBreaker,switchable_element-Breaker,True,False,SENSOR,SMART_scada_data,"['kWh', 'V']",br_023_21.B,,"[2024-01-01 05:00:00+00:00, None)",160,3
+GSO_9,8af1d5bb-89fe-4dc8-9f87-0c12aef4eee8,m_58784_21,Meter,meter,True,True,PRODUCER,SMART_meter_data,['kWh'],m_58784_21,,"[2024-01-01 05:00:00+00:00, None)",20,4
+GSO_9,a1d82bb6-7048-44be-9605-1d5d7e68005e,m_58784_21,Meter,meter,True,True,CONSUMER,SMART_meter_data,"['kWh', 'V']",m_58784_21,,"[2024-01-01 05:00:00+00:00, None)",20,5
+GSO_9,c559b443-e917-4071-a8e4-780071b3f0d2,pv_58784_21,Photovoltaic,photovoltaic,True,True,TRUE_GENERATION,SMART_pv_data,['kWh'],pv_58784_21,,"[2024-01-01 05:00:00+00:00, None)",10,6

@@ -1,2 +1,11 @@
 .ipynb_checkpoints
 .DS_Store
+testy.py
+testing.py
+test.py
+sweep.py
+feeder_ent_audit.py
+gso_topology_analysis.py
+substations_script.py
+test_time.py
+eda_meters.py

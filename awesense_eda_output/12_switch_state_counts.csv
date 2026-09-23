@@ -1,0 +1,9 @@
+type,customer_type,switch_is_open,element_count
+Switch,switchable_element-Switch,False,6526
+Fuse,switchable_element-Fuse,False,3058
+Switch,switchable_element-Recloser,False,364
+CircuitBreaker,switchable_element-Breaker,False,220
+Fuse,switchable_element,False,12
+CircuitBreaker,switchable_element,False,10
+Disconnector,switchable_element,False,4
+Switch,switchable_element,True,2

@@ -1,0 +1,47 @@
+test,status,rows,error
+01_server_connection,PASS,1,
+02_edm_version,PASS,1,
+03_data_version,FAIL,0,"function edm.data_version() does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+CONTEXT:  while executing query on unnamed dblink connection
+SQL function ""data_version"" statement 1
+"
+04_data_version_log,FAIL,0,"relation ""data_version_log"" does not exist
+LINE 3:         FROM data_version_log
+                     ^
+"
+05_class_documentation,PASS,37,
+06_function_documentation,PASS,10,
+07_grid_documentation,PASS,32,
+08_grid_inventory,PASS,229,
+09_grid_element_counts,PASS,229,
+10_element_type_counts,PASS,1984,
+11_phase_counts,PASS,5,
+12_switch_state_counts,PASS,8,
+13_connectivity_completeness,PASS,1,
+14_upstream_reference_integrity,PASS,1,
+15_self_reference_check,PASS,0,
+16_grid_element_data_source_integrity,PASS,1,
+17_cross_grid_upstream_check,FAIL,0,"server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+"
+18_meta_key_frequency_sample,FAIL,0,connection already closed
+19_capacity_related_meta_keys,FAIL,0,connection already closed
+20_grid_element_samples,FAIL,0,connection already closed
+21_data_source_counts,FAIL,0,connection already closed
+22_metric_counts,FAIL,0,connection already closed
+23_data_source_link_samples,FAIL,0,connection already closed
+24_source_candidate,FAIL,0,connection already closed
+25_consumer_candidate,FAIL,0,connection already closed
+26_topology_candidate,FAIL,0,connection already closed
+Topology function tests,SKIP,0,No usable grid element found
+36_time_series_candidate,FAIL,0,connection already closed
+ts_data_source_select,SKIP,0,No data source with metrics found
+39_candidate_grid_summary,FAIL,0,connection already closed
+40_asset_types_with_time_series,FAIL,0,connection already closed
+41_producer_consumer_by_grid,FAIL,0,connection already closed
+42_power_flow_direction_counts,FAIL,0,connection already closed
