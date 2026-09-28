@@ -28,6 +28,12 @@ DB_USER = os.getenv('EDM_USER')
 DB_PASSWORD = os.getenv('EDM_PASSWORD')
 DB_NAME = os.getenv('EDM_DATABASE', 'edm')
 
+# PURPOSE:
+# Screens the shortlisted Greensboro feeders for specific primary-line locations that could support a data center.
+# It ranks candidate locations using estimated thermal hosting capacity, based on feeder peak load, topology, and line/transformer/breaker ratings.
+# WHY: This reduces the search space before running the more detailed five-minute thermal hosting model and the data model further after that.
+# DEPENDENCIES: Reads greensboro_top15_peak_duration_analysis.xlsx (Feeder_Summary), queries the EDM using .env credentials, and outputs greensboro_top15_location_hosting_screen.xlsx.
+
 def connect_to_edm():
     missing = [name for name, value in {'EDM_HOST': DB_HOST, 'EDM_USER': DB_USER, 'EDM_PASSWORD': DB_PASSWORD, 'EDM_DATABASE': DB_NAME}.items() if not value]
     if missing:

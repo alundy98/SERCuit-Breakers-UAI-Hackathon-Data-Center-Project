@@ -29,6 +29,11 @@ DB_USER = os.getenv("EDM_USER")
 DB_PASSWORD = os.getenv("EDM_PASSWORD")
 DB_NAME = os.getenv("EDM_DATABASE", "edm")
 
+# PURPOSE:
+# Builds five-minute load profiles for each Greensboro substation by summing all mapped feeder-breaker loads at the same timestamps.
+# WHY: The MILP needs the true coincident existing substation load so candidate feeder capacity is not overstated by ignoring shared upstream demand.
+# DEPENDENCIES: Reads greensboro_flag_resolution_audit.xlsx and preserves/updates greensboro_substation_capacity_inputs.xlsx; also queries breaker SCADA from the EDM using .env credentials.
+# OUTPUT: Writes greensboro_substation_load_analysis.xlsx and greensboro_substation_5min_profiles_2024.csv.gz for later substation-constrained MILP modeling.
 
 def heading(text):
     print("\n" + "=" * 118)
