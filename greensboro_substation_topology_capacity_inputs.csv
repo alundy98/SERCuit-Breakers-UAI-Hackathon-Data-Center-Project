@@ -1,5 +1,0 @@
-SubstationID,CurrentMILPCandidateSubstation,ConfigurationStatus,ScalarCapacityResolvedForCurrentMILP,RecommendedTotalCapacityMVA,RecommendedTotalCapacityMWAtPF,CapacityBasis,BankLevelConstraintsReadyForV3,ExistingCoincidentPeakMW,HeadroomAt80PctMW,HeadroomAt90PctMW,HeadroomAt100PctMW
-hvmv_1_22,True,SOURCE_BANK_MAPPING_AMBIGUOUS,False,,,UNRESOLVED,False,0.878232,,,
-hvmv_2_22,True,SOURCE_BANK_MAPPING_INCOMPLETE,False,,,UNRESOLVED,False,0.695316,,,
-hvmv_4_21,True,SOURCE_BANK_MAPPING_AMBIGUOUS,False,,,UNRESOLVED,False,10.96206,,,
-hvmv_5_22,True,SOURCE_BANK_MAPPING_AMBIGUOUS,False,,,UNRESOLVED,False,4.464828000000001,,,

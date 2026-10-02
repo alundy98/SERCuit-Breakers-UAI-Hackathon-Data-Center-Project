@@ -548,7 +548,6 @@ def print_summary(df, feeder_confidence, substation_confidence, scatter_data):
     columns = ["FeederVisualRank", "GridID", "CandidateLineID", "SubstationID", "VisualHostingMW", "Substation_P95LoadMW", "FeederConfidenceScore", "SubstationConfidenceScore", "FinalLocationConfidenceScore"]
     print(scatter_data[columns].to_string(index=False))
 
-
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

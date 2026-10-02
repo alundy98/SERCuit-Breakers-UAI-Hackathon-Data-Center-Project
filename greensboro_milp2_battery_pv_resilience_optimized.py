@@ -8,10 +8,6 @@ try:
 except ImportError as exc:
     raise ImportError("Pyomo is required. Install with: pip install pyomo highspy") from exc
 
-
-# ======================================================================================
-# PURPOSE
-# ======================================================================================
 # MILP 2 / BATTERY + PV OUTAGE RESILIENCE - OPTIMIZED PV TREATMENT
 #
 # MILP 1 remains the normal-state existing-grid siting / hosting-capacity answer.
@@ -56,13 +52,8 @@ except ImportError as exc:
 #
 # PV receives outage credit only if the proposed PV and BESS are assumed to be on the
 # data-center side of the outage boundary with grid-forming/islanding capability.
-# ======================================================================================
 
-
-# ======================================================================================
 # FILES
-# ======================================================================================
-
 BASE_MILP_FILE = "greensboro_final_integrated_milp_results.xlsx"
 BASE_MILP_CANDIDATE_SHEET = "Candidate_Optimization"
 BASE_MILP_SELECTED_SHEET = "Selected_Site"
@@ -73,9 +64,7 @@ OUTPUT_FILE = "greensboro_milp2_battery_pv_resilience_optimized_results.xlsx"
 OUTPUT_CSV = "greensboro_milp2_battery_pv_resilience_optimized_results.csv"
 
 
-# ======================================================================================
 # STUDY SETTINGS
-# ======================================================================================
 
 INTERVAL_MINUTES = 5
 DT_HOURS = INTERVAL_MINUTES / 60.0

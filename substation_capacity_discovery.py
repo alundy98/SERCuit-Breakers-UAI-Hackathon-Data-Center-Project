@@ -535,7 +535,7 @@ def summarize_substation_evidence(substation_id, evidence_df, breaker_group, cur
 
     direct = bool((subset["EvidenceStrength"] == "DIRECT").any())
     enclosed_transformer = bool(((subset["Relationship"] == "ENCLOSED_ASSET") & subset["ElementType"].astype(str).str.contains("transformer", case=False, na=False)).any())
-    source_transformer = bool((subset["Relationship"].isin(["EXPLICIT_UPSTREAM_ASSET", "SOURCE_TRACE_ASSET"])) & subset["ElementType"].astype(str).str.contains("transformer", case=False, na=False)).any()
+    source_transformer = bool(((subset["Relationship"].isin(["EXPLICIT_UPSTREAM_ASSET", "SOURCE_TRACE_ASSET"])) & subset["ElementType"].astype(str).str.contains("transformer", case=False, na=False)).any())
 
     if direct and pd.notna(best["InferredMVA"]):
         status = "DIRECT_CAPACITY_EVIDENCE_FOUND"
